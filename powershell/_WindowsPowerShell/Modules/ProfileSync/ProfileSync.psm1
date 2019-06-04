@@ -1,4 +1,4 @@
-function ProfilePrep {
+function ProfileSync {
 	Param(
 
 		[String]$MessageOnSuccess = 'Pass - Startup scripts configured (see $Profile)',
@@ -67,9 +67,14 @@ function ProfilePrep {
 	}
 	
 	$Pro = @();
+
+	$Pro += 'Write-Host "Loading personal and system profiles...`n";';
+
 	$Pro += 'New-Alias grep Select-String;';
+
 	$Pro += 'New-Alias which Get-Command;';
-	$Pro += (('$GithubOwner="')+(${GithubOwner})+('"; $GithubRepo="')+(${GithubRepo})+('"; If (Test-Path "${HOME}/${GithubRepo}") { Set-Location "${HOME}/${GithubRepo}"; git reset --hard "origin/master"; git pull; } Else { Set-Location "${HOME}"; git clone "https://github.com/${GithubOwner}/${GithubRepo}.git"; } . "${HOME}/${GithubRepo}/powershell/_WindowsPowerShell/Modules/ImportModules.ps1";'));
+
+	$Pro += (('$GithubOwner="')+(${GithubOwner})+('"; $GithubRepo="')+(${GithubRepo})+('";')+(' Write-Host "Task - Sync local git repository to origin `"https://github.com/${GithubOwner}/${GithubRepo}.git`"..." -ForegroundColor Green; If (Test-Path "${HOME}/${GithubRepo}") { Set-Location "${HOME}/${GithubRepo}"; git reset --hard "origin/master"; git pull; } Else { Set-Location "${HOME}"; git clone "https://github.com/${GithubOwner}/${GithubRepo}.git"; } . "${HOME}/${GithubRepo}/powershell/_WindowsPowerShell/Modules/ImportModules.ps1"; Write-Host "`nPass - PowerShell Modules Synchronized`n" -ForegroundColor Cyan;'));
 	$Pro += 'Set-Location "${HOME}";';
 
 	### Overwrite $Profile content
@@ -89,4 +94,4 @@ function ProfilePrep {
 
 }
 
-Export-ModuleMember -Function "ProfilePrep";
+Export-ModuleMember -Function "ProfileSync";

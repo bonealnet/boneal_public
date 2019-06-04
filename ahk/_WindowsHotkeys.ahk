@@ -60,18 +60,25 @@ GroupAdd, Explorer, ahk_class CabinetWClass
 ;
 #Z::
 	WinGetActiveStats, Title, Width, Height, Left, Top
+	WinGetTitle, WinTitle, A
 	WinGetText, WinText, A
+	WinGet, WinID, ID, A
 	WinGet, WinPID, PID, A
-	WinGet, WinPID, PID, A
-	WinGet, ProcessName, ProcessName, A
-	WinGet, ProcessPath, ProcessPath, A
+	WinGetClass, WinClass, A
+	WinGet, WinProcessName, ProcessName, A
+	WinGet, WinProcessPath, ProcessPath, A
+	WinGet, ProcessControlNames, ControlList, A	; Get all control names in this window
+
 	MsgBox, 0, Active Window Specs,
 		(LTrim
 
 			➣ WinTitle:   %WinTitle%
+			➣ WinID:   %WinID%
 			➣ WinPID:   %WinPID%
-			➣ ProcessName:   %ProcessName%
-			➣ ProcessPath:   %ProcessPath%
+			➣ WinClass:   %WinClass%
+			➣ WinProcessName:   %WinProcessName%
+			➣ WinProcessPath:   %WinProcessPath%
+			➣ ProcessControlNames:   %ProcessControlNames%
 
 			➣ Left:   %Left%
 			➣ Top:    %Top%
@@ -86,11 +93,20 @@ GroupAdd, Explorer, ahk_class CabinetWClass
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;   HOTKEY:  Win + V
-;		ACTION:  Open Program (see below)
+;   HOTKEY:  Win + -
+;		ACTION:  Type a line of -----'s
 ;
 #V::
 	OpenVSCode()
+	Return
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;   HOTKEY:  Win + V
+;		ACTION:  Open Program (see below)
+;
+#-::
+	; StringToType := StringRepeat("-",60)
+	SendInput, ------------------------------------------------------------
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -146,6 +162,17 @@ GetTimezoneOffset_P() {
 }
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; 
+; Repeat a string a given number of times
+StringRepeat(StrToRepeat, Multiplier) {
+	ReturnedVal := ""
+	Loop, %Multiplier% {
+		ReturnedVal .= StrToRepeat
+	}
+	Return ReturnedVal
+}
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
 ; Timestamp		:::		Win + Shift + D
 ; Timestamp		:::		Win + Ctrl + D
@@ -174,20 +201,21 @@ GetTimezoneOffset_P() {
 	time_format = yyyy-MM-dd_HH-mm-ss
   FormatTime,TIMESTAMP,,%time_format%
 	RET_VAL = %TIMESTAMP%
-  Send %RET_VAL%
+  ; Send %RET_VAL%
+  SendInput %RET_VAL%
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
 ;  ACTION:  type the clipboard (workaround for paste blocking web-scripts)
 ;  HOTKEY:  Win + P
-#P::
++#P::
 	SetKeyDelay, 0, -1
 	MsgBox, 4,, Type the Clipboard? (Yes/No)
 	IfMsgBox Yes
 		Send %Clipboard%
 	else {
-		MsgBox Skipped
+		; MsgBox Skipped
 	}
 	Return
 ;
@@ -236,7 +264,7 @@ GetTimezoneOffset_P() {
 	;  (MAKE SURE TO HIDE SCREENSHOTS BEFOREHAND)
 	Loop {
 		MouseClick, Left, 861, 947
-		Sleep 30000
+		Sleep 10000
 		MouseClick, Left, 1420, 905
 		Sleep 1000
 		MouseClick, Left, 848, 575
@@ -287,27 +315,74 @@ GetTimezoneOffset_P() {
 	CoordMode,Mouse,Screen
 	SetDefaultMouseSpeed, 0
 	SetControlDelay, -1
-	; MsgBox, % substr(a_osversion, 1, 100)
-	Sleep 250
-	Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
-	Sleep 1000
-	if (A_OSVersion="WIN_7") {
+	SetTitleMatchMode, 1
+	SysGet, MonitorCountBefore, MonitorCount
+	SysGet, ViewportWidthBefore, 78
+	SysGet, ViewportHeightBefore, 79
+
+	MouseGetPos, MouseX, MouseY
+
+	If (A_OSVersion="WIN_7") {
+
 		; Windows7 - Duplicate Monitors
 		x_loc = 874
 		y_loc = 520
+		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
+		Sleep 1000
 		MouseClick, Left, %x_loc%, %y_loc%
-	} else if (substr(A_OSVersion, 1, 4)="10.0") {
+		Sleep 1
+		
+	} Else If (substr(A_OSVersion, 1, 4)="10.0") {
+
 		; Windows10 - Duplicate Monitors
-		x_loc = 1740
-		; x_loc = 180
-		y_loc = 213
-		MouseClick, Left, %x_loc%, %y_loc%
-		; Title=Project
-		; ControlClick, x%x_loc% y%y_loc%, %Title%
+		x_loc := (A_ScreenWidth - 20)
+		y_loc = 210
+		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
+		StartMilliseconds := A_TickCount
+		Loop {
+			LoopingForMilliseconds := (A_TickCount-StartMilliseconds)
+			WinGetTitle, WinTitle, A
+			WinGetClass, WinClass, A
+			If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
+				; Windows-Projection menu detected --> select "Duplicate"
+				Sleep 50
+				MouseClick, Left, %x_loc%, %y_loc%
+				; Wait until the new monitor layout is loaded
+				Loop 500 {
+					Sleep 10
+					SysGet, MonitorCountAfter, MonitorCount
+					If (MonitorCountAfter != MonitorCountBefore) {
+						Break
+					}
+				}
+				WinGetTitle, WinTitle, A
+				WinGetClass, WinClass, A
+				If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
+					WinClose, A
+				} Else {
+					; MouseClick, Left, 50, A_ScreenHeight
+				}
+				Break
+			} Else If (LoopingForMilliseconds > 2000) {
+				MsgBox, 
+				(LTrim
+					Error - Unable to locate Projection window
+				)
+				Break
+			} Else {
+				Sleep 10
+			}
+		}
 	}
-	Sleep 250
-	Send {Escape}
+
+	MouseMove, %MouseX%, %MouseY%
+
+	SysGet, MonitorCountAfter, MonitorCount
+	SysGet, ViewportWidthAfter, 78
+	SysGet, ViewportHeightAfter, 79
 	Return
+
+;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + ]
 ;  ACTION:  FOLLOW-UP HOTKEY TO: Windows-key P   :::   Click "Extend" monitors
@@ -316,25 +391,68 @@ GetTimezoneOffset_P() {
 	CoordMode,Mouse,Screen
 	SetDefaultMouseSpeed, 0
 	SetControlDelay, -1
-	; MsgBox, % substr(a_osversion, 1, 100)
-	Sleep 250
-	Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
-	Sleep 1000
-	if (A_OSVersion="WIN_7") {
+	SetTitleMatchMode, 1
+	SysGet, MonitorCountBefore, MonitorCount
+	SysGet, ViewportWidthBefore, 78
+	SysGet, ViewportHeightBefore, 79
+
+	MouseGetPos, MouseX, MouseY
+
+	If (A_OSVersion="WIN_7") {
+
 		; Windows7 - Extend Monitors
 		x_loc = 1044
 		y_loc = 520
+		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
+		Sleep 1000
 		MouseClick, Left, %x_loc%, %y_loc%
-	} else if (substr(A_OSVersion, 1, 4)="10.0") {
+		Sleep 1
+
+	} Else If (substr(A_OSVersion, 1, 4)="10.0") {
+
 		; Windows10 - Extend Monitors
-		x_loc = 1740
+		x_loc := (A_ScreenWidth - 20)
 		y_loc = 315
-		MouseClick, Left, %x_loc%, %y_loc%
-		; Title=Project
-		; ControlClick, x%x_loc% y%y_loc%, %Title%
+		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
+		StartMilliseconds := A_TickCount
+		Loop {
+			LoopingForMilliseconds := (A_TickCount-StartMilliseconds)
+			WinGetTitle, WinTitle, A
+			WinGetClass, WinClass, A
+			If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
+				; Windows-Projection menu detected --> select "Duplicate"
+				Sleep 50
+				MouseClick, Left, %x_loc%, %y_loc%
+				; Wait until the new monitor layout is loaded
+				Loop 500 {
+					Sleep 10
+					SysGet, MonitorCountAfter, MonitorCount
+					If (MonitorCountAfter != MonitorCountBefore) {
+						Break
+					}
+				}
+				WinGetTitle, WinTitle, A
+				WinGetClass, WinClass, A
+				If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
+					WinClose, A
+				} Else {
+					; MouseClick, Left, 50, A_ScreenHeight
+				}
+				Break
+			} Else If (LoopingForMilliseconds > 2000) {
+				MsgBox, 
+				(LTrim
+					Error - Unable to locate Projection window
+				)
+				Break
+			} Else {
+				Sleep 10
+			}
+		}
 	}
-	Sleep 250
-	Send {Escape}
+
+	MouseMove, %MouseX%, %MouseY%
+
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,8 +460,8 @@ GetTimezoneOffset_P() {
 ;  ACTION:  Output cursor location
 ;
 #RButton::
-			CoordMode,Mouse,Screen
-			MouseGetPos, MouseX, MouseY
+	CoordMode,Mouse,Screen
+	MouseGetPos, MouseX, MouseY
 	MsgBox,
 	(LTrim
 	Pointer Location
@@ -351,6 +469,24 @@ GetTimezoneOffset_P() {
 	➣Y_loc:   %MouseY%
 	)
 	Return
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Windows-Key + L
+;  ACTION:  Lock the Computer & put monitor(s) into 
+;
+#End::
+#L::
+	DllCall("LockWorkStation")  ; Lock the Computer
+	Sleep 1000
+	SendMessage,0x112,0xF170,2,,Program Manager 
+	; 0x112  = WM_SYSCOMMAND
+	; 0xF170 = SC_MONITORPOWER
+	;            |-->  -1 = turn the monitor(s) on
+	;            |-->   1 = activate low-power-mode on the monitor(s)
+	;            |-->   2 = turn the monitor(s) off
+	Return
+; 
+; Citation: https://autohotkey.com/docs/commands/PostMessage.htm
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + N
@@ -425,34 +561,6 @@ CapsLock & s::
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Mouse-Wheel-Click-Hold + Mouse-Wheel-Down
-;  ACTION:  Scroll to Bottom (Ctrl+End)
-;
-; MButton & WheelDown::
-	; MouseClick,WheelDown,,,50,0,D,R ; Previously "Super Scroll Down"
-	; Send ^{End}
-	; Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Mouse-Wheel-Click-Hold + Mouse-Wheel-Down
-;  ACTION:  Scroll to Top (Ctrl+Home)
-;
-; MButton & WheelUp::
-	; MouseClick,WheelUp,,,50,0,D,R
-	; Send ^{Home}
-	; Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Mouse-Middle-Click
-;  ACTION:  Restores Mouse-Middle-Click to normal operation
-;               AutoHotkey otherwise tries to lump the click with related actions,
-;                  then drops the click (forgets it) it if none are found.
-;
-; MButton::
-	; MouseClick,Middle
-	; Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  "Rock" the Mouse's Wheel Left or Right   (Mouse-Wheel-Left or Mouse-Wheel-Right)
 ;  ACTION:  Change Tabs Left or Right
 ;
@@ -468,8 +576,15 @@ WheelRight::
 ;  ACTION:  Chrome - Open a New Instance of Google Chrome
 ;
 #C::
-	; OpenVisualStudio()
-	OpenChrome()
+	; OpenChrome()
+	; Loop 99 {
+	; Loop 49 {
+	Loop 24 {
+		Send {TAB}
+		Sleep 10
+		Send {SPACE}
+		Sleep 10
+	}
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -884,6 +999,21 @@ ActiveWindow_Maximize() {
 		WinMaximize A
 	}
 	Return
+}
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+get_ahk_id_from_title(WinTitle,ExcludeTitle) {
+	SetTitleMatchMode, 2
+	ControlGet, output_var, Hwnd,,, %WinTitle%,, %ExcludeTitle%
+	return_ahk_id=ahk_id %output_var%
+	return return_ahk_id
+}
+get_ahk_id_from_pid(WinPid) {
+	SetTitleMatchMode, 2
+	ControlGet, output_var, Hwnd,,, ahk_pid %WinPid%
+	return_ahk_id=ahk_id %output_var%
+	return return_ahk_id
 }
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------

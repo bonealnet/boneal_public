@@ -1,2 +1,2 @@
 
-## Refer to local file "_WindowsPowerShell/ProfilePrep/ProfilePrep.psm1"
+## Refer to local file "_WindowsPowerShell/ProfileSync/ProfileSync.psm1"

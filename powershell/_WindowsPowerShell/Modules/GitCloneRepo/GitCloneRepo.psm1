@@ -16,6 +16,8 @@ function GitCloneRepo {
 
 	)
 	
+	If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Task - Attempting to clone git repository `"${Url}`" ")); }
+
 	# Default the parent-dir to temp-dir (when no dir is passed via parameter specification)
 	If (!($PSBoundParameters.ContainsKey('LocalDirname'))) {
 
@@ -23,7 +25,7 @@ function GitCloneRepo {
 
 		$DefaultDirname = (($TmpDir)+("/")+("GitCloneRepo"));
 
-		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Task - Defaulting Git ParentDir to: ")+($DefaultDirname)); }
+		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Info - Defaulting git repository's parent directory to `"")+($DefaultDirname)+("`"")); }
 
 		$LocalDirname = $DefaultDirname;
 		
@@ -41,10 +43,10 @@ function GitCloneRepo {
 
 	# Determine if we need to create repository's parent-directory
 	If ($Repo.ParentDirExists -eq $false) {
-		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Task - Creating repo parent-directory: ") + ($Repo.ParentDir)); }
+		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Info - Creating git repository's parent directory `"")+($Repo.ParentDir)+("`"")); }
 		New-Item -ItemType "Directory" -Path (($Repo.ParentDir)+("/")) | Out-Null;
 	} Else {
-		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Skip - No need to create repo parent-directory (already exists): ") + ($Repo.ParentDir)); }
+		If (!($PSBoundParameters.ContainsKey('Quiet'))) { <# Write-Host (("Skip - No need to create repo parent-directory (already exists): ") + ($Repo.ParentDir)); #> }
 	}
 
 	Set-Location -Path ($Repo.ParentDir);
@@ -57,25 +59,20 @@ function GitCloneRepo {
 		
 	} Else {
 
-		# Attempt to resolve any URL-Redirects
-		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Task - Resolving Git-Repo Url: ") + ($Url)); }
-		
+		# Attempt to resolve any git repository url redirects
 		$ResolvedUrl = [System.Net.HttpWebRequest]::Create($Url).GetResponse().ResponseUri.AbsoluteUri;
 
 		$ResolvedExitCode = If($?){0}Else{1};
 		If ($ResolvedExitCode -ne 0) {
-			# # Failed to resolve Url
-			# Write-Host (("Fail - Unable to resolve Git-Repo Url: ") + ($Url));
-			# Start-Sleep -Seconds 60;
-			# Exit 1;
-			$ResolvedUrl = $Url
+			# Unable to resolve git repository url
+			$ResolvedUrl = $Url;
 		}
 
 		# Determine if Git-Repo Url is forwarded or not
 		If ($ResolvedUrl -ne $Url) {
-			If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Pass - Git-Repo Url forwarded to source: ") + ($ResolvedUrl)); }
+			If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host "Pass - Resolved git repository url to `"${ResolvedUrl}`" from `"${Url}`""; }
 		} Else {
-			If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Pass - Git-Repo Url exists as source: ") + ($ResolvedUrl)); }
+			If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host "Pass - Resolved git repository url to `"${ResolvedUrl}`""; }
 		}
 
 	}
@@ -92,13 +89,20 @@ function GitCloneRepo {
 	
 	
 	If ((Test-Path -Path ($Repo.ConfigFile_Fullpath)) -eq $true) {
+
 		# Repo exists & has a "/.git/config" file in it - try to reset it
-		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Task - Attempting to reset Git-Repo: ") + ($Repo.RepoBasename)); }
 		Set-Location -Path ($WorkingTreeFullpath);
-		$Repo.ResetHead = (git reset --hard "origin/master");
+		$CommandDescription = "Resetting local git repository to branch `"origin/${GitBranch}`"";
+		$Repo.ResetHead = (git reset --hard "origin/${GitBranch}");
 		$Repo.ResetExitCode = If($?){0}Else{1};
-		$Repo.Pull = (git pull);
-		$Repo.PullExitCode = If($?){0}Else{1};
+		If ($Repo.ResetExitCode -ne 0) {
+			If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Fail - Error thrown while [")+($CommandDescription)+("]")); }
+		} Else {
+			If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Pass - Success while [")+($CommandDescription)+("]")); }
+		}
+		# $Repo.Pull = (git pull);
+		# $Repo.PullExitCode = If($?){0}Else{1};
+
 
 	} Else {
 
@@ -154,13 +158,13 @@ function GitCloneRepo {
 		# Optional - Revert to specific commit SHA hash (revert the repository to a speicifc revision/point-in-time)
 		$CommitSHA = $CommitSHA.Trim();
 		If (($PSBoundParameters.ContainsKey('CommitSHA')) -and ($CommitSHA.Length -eq "40")) {
-			If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Task - Reverting Repository to commit SHA: `"")+($CommitSHA)+("`"")); }
+			If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Task - Reverting local git repository to commit SHA `"")+($CommitSHA)+("`"")); }
 			Set-Location -Path ($WorkingTreeFullpath);
 			$Repo.ResetHead = (git reset --hard "$CommitSHA");
 		}
 
 		# Successfully found (at least one) repo which exists
-		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Pass - Updated local git repo: `"")+($WorkingTreeFullpath)+("`"")); }
+		If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host (("Pass - Updated local git repository `"")+($WorkingTreeFullpath)+("`"")); }
 
 		
 		# Get the absolute path to this git working-tree via linux sh/bash command
@@ -168,7 +172,7 @@ function GitCloneRepo {
 		$WorkingTree_WindowsPath = (pwd);
 		$WorkingTree_UnixPath = If ($CanUse_sh -eq $true){ (sh -c "pwd") } Else { (bash -c "pwd") };
 
-		# Remove amateurish non-case-sensitive directires (in Windows) while in a linux-based environment
+		# Remove amateurish non-case-sensitive directories (in Windows) while in a linux-based environment
 		$RelPath_InvalidDir = (($Repo.RepoBasename)+(".DTO"));
 		$RelPath_CorrectDir = (($Repo.RepoBasename)+(".Dto"));
 		
