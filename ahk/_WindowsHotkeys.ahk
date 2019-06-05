@@ -26,15 +26,18 @@
 ;
 ; Global Settings
 ;
-#SingleInstance force
-;
+DetectHiddenWindows, On
+; 
 #Persistent
-;
+; 
+#SingleInstance force
+; 
 ; #EscapeChar \  ; Change it to be backslash instead of the default of accent (`).
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
 USER_DESKTOP=%USERPROFILE%\Desktop
+; 
 USER_DOCUMENTS=%USERPROFILE%/Documents
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -42,6 +45,19 @@ USER_DOCUMENTS=%USERPROFILE%/Documents
 ; Setup a group for targeting [Windows Explorer] windows
 GroupAdd, Explorer, ahk_class ExploreWClass ; Unused on Vista and later
 GroupAdd, Explorer, ahk_class CabinetWClass
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+;	Tooltip clearing tool(s)
+;
+RemoveToolTip:
+	ToolTip
+	return
+;
+ClearTooltip(Timeout) {
+	SetTimer, RemoveToolTip, -%Timeout%
+	return
+}
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;   HOTKEY:  Win + Esc
@@ -54,11 +70,13 @@ GroupAdd, Explorer, ahk_class CabinetWClass
 	IfMsgBox, Yes, Edit
 	Return
 ;
+
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;   HOTKEY:  Win + Z
 ;		ACTION:  Show active window's location & dimension specs in a popup message-box
 ;
 #Z::
+
 	WinGetActiveStats, Title, Width, Height, Left, Top
 	WinGetTitle, WinTitle, A
 	WinGetText, WinText, A
@@ -67,29 +85,50 @@ GroupAdd, Explorer, ahk_class CabinetWClass
 	WinGetClass, WinClass, A
 	WinGet, WinProcessName, ProcessName, A
 	WinGet, WinProcessPath, ProcessPath, A
-	WinGet, ProcessControlNames, ControlList, A	; Get all control names in this window
+	WinGet, ControlNames, ControlList, A	; Get all control names in this window
+	
+	; Create the ListView with two columns
+	
+	; Gui, MyGui:Add, Text,, Text for about-box.
 
-	MsgBox, 0, Active Window Specs,
-		(LTrim
 
-			➣ WinTitle:   %WinTitle%
-			➣ WinID:   %WinID%
-			➣ WinPID:   %WinPID%
-			➣ WinClass:   %WinClass%
-			➣ WinProcessName:   %WinProcessName%
-			➣ WinProcessPath:   %WinProcessPath%
-			➣ ProcessControlNames:   %ProcessControlNames%
+	; Note that [ Gui, {configs...} ] declarations must come DIRECTLY (as-in the PREVIOUS LINE) BEFORE [ Gui, Add, ... ]
+	Gui, Font, s10, Tahoma
+	Gui, Font, s10, Consolas
+	Gui, Font, s10, Courier New
+	Gui, Font, s10, Open Sans
+	Gui, Font, s10, Fira Code
+	Gui, Color, 1E1E1E
+	
+	GUI_ROWCOUNT := 12
+	GUI_WIDTH := 1000
 
-			➣ Left:   %Left%
-			➣ Top:    %Top%
-			
-			➣ Width:  %Width%
-			➣ Height: %Height%
+	Gui, Add, ListView, r%GUI_ROWCOUNT% w%GUI_WIDTH% gMyListView, Key|Val
 
-			➣ WinMove,,,%Left%,%Top%,%Width%,%Height%
-		)
-	; MsgBox, 0, Active Window Specs, Title:`n   [%Title%]   `n`nDimensions: `n   Width (%Width%)     Height (%Height%)   `n`nPosition: `n   X (%X%)     Y (%Y%)
-	; MsgBox, 0, Active Window Specs, Title:`n`n`n ==> WinMove,,,%X%,%Y%,%Width%,%Height%
+	LV_Add("", "Title", WinTitle)
+	LV_Add("", "Class", WinClass)
+	LV_Add("", "ProcessName", WinProcessName)
+	LV_Add("", "ProcessPath", WinProcessPath)
+	LV_Add("", "ControlName(s)", ControlNames)
+	LV_Add("", "ID", WinID)
+	LV_Add("", "PID", WinPID)
+	LV_Add("", "Left", Left)
+	LV_Add("", "Top", Top)
+	LV_Add("", "Width", Width)
+	LV_Add("", "Height", Height)
+	LV_Add("", "Mimic in AHK", "WinMove,,,%Left%,%Top%,%Width%,%Height%")
+
+	LV_ModifyCol()  ; Auto-size each column to fit its contents.
+
+	; Display the window and return. The script will be notified whenever the user double clicks a row.
+	Gui, Show
+
+	MyListView:
+	if (A_GuiEvent = "DoubleClick") {
+		Gui, Destroy
+		; LV_GetText(RowText, A_EventInfo)  ; Get the text from the row's first field.
+		; ToolTip You double-clicked row number %A_EventInfo%. Text: "%RowText%"
+	}
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -166,8 +205,10 @@ GetTimezoneOffset_P() {
 ; Repeat a string a given number of times
 StringRepeat(StrToRepeat, Multiplier) {
 	ReturnedVal := ""
-	Loop, %Multiplier% {
-		ReturnedVal .= StrToRepeat
+	If (Multiplier > 0) {
+		Loop, %Multiplier% {
+			ReturnedVal .= StrToRepeat
+		}
 	}
 	Return ReturnedVal
 }
@@ -177,32 +218,50 @@ StringRepeat(StrToRepeat, Multiplier) {
 ; Timestamp		:::		Win + Shift + D
 ; Timestamp		:::		Win + Ctrl + D
 ; Timestamp		:::		Win + Alt + D
-+#D::
+#D::
 ^#D::
 !#D::
++#D::
++^#D::
++!#D::
+
 	SetKeyDelay, 0, -1
-	if WinActive("ahk_group Explorer") { ; If using Explorer
-		time_format = yyyy-MM-dd_HH-mm-ss
-	} else {
-		time_format = yyyy-MM-dd HH:mm:ss
+		
+	TimezoneOffset := GetTimezoneOffset_P()
+
+	Needle_Win := "#D"
+	Needle_AltWin := "!#D"
+	Needle_CtrlWin := "^#D"
+
+	; StringGetPos, pos, file, \, R%A_Index%
+        ; if ErrorLevel
+	
+	If InStr(A_ThisHotkey, Needle_Win) { ; Win
+		dat_format=yyyy-MM-dd_HH-mm-ss
+
+	} Else If InStr(A_ThisHotkey, Needle_AltWin) { ; Alt + Win
+		dat_format=yyyy.MM.dd-HH.mm.ss
+
+	} Else If InStr(A_ThisHotkey, Needle_CtrlWin) { ; Ctrl + Win
+		dat_format=yyyyMMdd-HHmmss
+
+	} Else {
+		dat_format=yyyy-MM-dd_HH-mm-ss
 	}
-	; time_format = yyyyMMdd-HHmmss
-	FormatTime,TIMESTAMP,,%time_format%
-	TZ_OFFSET_P := GetTimezoneOffset_P()
-	RET_VAL = %TIMESTAMP%%TZ_OFFSET_P%
-  Send %RET_VAL%
-	Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
-; Timestamp		:::		Win + D
-#D::
-	SetKeyDelay, 0, -1
-	time_format = yyyy-MM-dd_HH-mm-ss
-  FormatTime,TIMESTAMP,,%time_format%
-	RET_VAL = %TIMESTAMP%
-  ; Send %RET_VAL%
-  SendInput %RET_VAL%
+
+	If WinActive("ahk_group Explorer") {
+		dat_format := StrReplace(dat_format, ":", "-")
+	}
+
+	FormatTime, DatTimestamp, , %dat_format%
+
+	Keys = %DatTimestamp%
+	If InStr(A_ThisHotkey, "+") { ; Shift - concat the timezone onto the output timestamp
+		Keys = %DatTimestamp%%TZ_OFFSET_P%
+	}
+
+  Send %Keys%
+
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -327,6 +386,8 @@ StringRepeat(StrToRepeat, Multiplier) {
 		; Windows7 - Duplicate Monitors
 		x_loc = 874
 		y_loc = 520
+		Send {Escape}
+		Sleep 250
 		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
 		Sleep 1000
 		MouseClick, Left, %x_loc%, %y_loc%
@@ -337,6 +398,8 @@ StringRepeat(StrToRepeat, Multiplier) {
 		; Windows10 - Duplicate Monitors
 		x_loc := (A_ScreenWidth - 20)
 		y_loc = 210
+		Send {Escape}
+		Sleep 250
 		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
 		StartMilliseconds := A_TickCount
 		Loop {
@@ -345,7 +408,7 @@ StringRepeat(StrToRepeat, Multiplier) {
 			WinGetClass, WinClass, A
 			If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
 				; Windows-Projection menu detected --> select "Duplicate"
-				Sleep 50
+				Sleep 500
 				MouseClick, Left, %x_loc%, %y_loc%
 				; Wait until the new monitor layout is loaded
 				Loop 500 {
@@ -392,6 +455,7 @@ StringRepeat(StrToRepeat, Multiplier) {
 	SetDefaultMouseSpeed, 0
 	SetControlDelay, -1
 	SetTitleMatchMode, 1
+	
 	SysGet, MonitorCountBefore, MonitorCount
 	SysGet, ViewportWidthBefore, 78
 	SysGet, ViewportHeightBefore, 79
@@ -403,6 +467,8 @@ StringRepeat(StrToRepeat, Multiplier) {
 		; Windows7 - Extend Monitors
 		x_loc = 1044
 		y_loc = 520
+		Send {Escape}
+		Sleep 250
 		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
 		Sleep 1000
 		MouseClick, Left, %x_loc%, %y_loc%
@@ -413,6 +479,8 @@ StringRepeat(StrToRepeat, Multiplier) {
 		; Windows10 - Extend Monitors
 		x_loc := (A_ScreenWidth - 20)
 		y_loc = 315
+		Send {Escape}
+		Sleep 250
 		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
 		StartMilliseconds := A_TickCount
 		Loop {
@@ -421,7 +489,7 @@ StringRepeat(StrToRepeat, Multiplier) {
 			WinGetClass, WinClass, A
 			If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
 				; Windows-Projection menu detected --> select "Duplicate"
-				Sleep 50
+				Sleep 500
 				MouseClick, Left, %x_loc%, %y_loc%
 				; Wait until the new monitor layout is loaded
 				Loop 500 {
@@ -434,7 +502,8 @@ StringRepeat(StrToRepeat, Multiplier) {
 				WinGetTitle, WinTitle, A
 				WinGetClass, WinClass, A
 				If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
-					WinClose, A
+					; WinClose, A ; WinClose seems to glitch Windows 10 
+					Send {Escape}
 				} Else {
 					; MouseClick, Left, 50, A_ScreenHeight
 				}
@@ -532,32 +601,96 @@ CapsLock::
 ;  HOTKEY:  Caps Lock + w
 ;  ACTION:  Scroll up 10 wheel clicks
 ;
-CapsLock & w::
-	MouseClick,WheelUp,,,10,0,D,R
-	Return
+; CapsLock & w::
+; 	MouseClick,WheelUp,,,10,0,D,R
+; 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  Caps Lock + s
 ;  ACTION:  Scroll down 10 wheel clicks
 ;
-CapsLock & s::
-	MouseClick,WheelDown,,,10,0,D,R
+; CapsLock & s::
+; 	MouseClick,WheelDown,,,10,0,D,R
+; 	Return
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Win + Mouse-Wheel Up/Down
+;  ACTION:  Turn computer volume up/down
+;
+#MButton::
+#WheelUp::
+#WheelDown::
+
+	MuteIcon=🔇
+
+	VolumeLevel_Increment := 4
+
+	Volume_ForceUpperLimit := 25
+
+	SoundGet, VolumeLevel_BeforeEdits
+
+	VolumeLevel_BeforeEdits := Round(VolumeLevel_BeforeEdits)
+
+	If (A_ThisHotkey=="#MButton") { ; Volume mute
+		SoundSet, +1, , MUTE
+
+	} Else If (A_ThisHotkey=="#WheelUp") { ; Volume up
+		SoundSet,+%VolumeLevel_Increment%
+
+	} Else If (A_ThisHotkey=="#WheelDown") { ; Volume Down
+		SoundSet,-%VolumeLevel_Increment%
+		
+	}
+	
+	SoundGet, VolumeLevel_AfterEdits
+	SoundGet, MasterMute, , MUTE
+
+	VolumeLevel_AfterEdits := Round(VolumeLevel_AfterEdits)
+
+	DingbatCount_MaxVolume := 20
+
+	VolumeBarsCount := Round( ( VolumeLevel_AfterEdits/100 ) * DingbatCount_MaxVolume)
+	VolumeSpacesCount := DingbatCount_MaxVolume - VolumeBarsCount
+
+	VolumeBars := StringRepeat("⬛️",VolumeBarsCount)
+	VolumeSpaces := StringRepeat("⬜️",VolumeSpacesCount)
+
+	;# ▪️◾◼️⬛️
+	;# ▫️️◽️◻️️⬜️
+
+	FinalVolumeBars := VolumeBars VolumeSpaces
+	Length_FinalBars := StrLen(FinalVolumeBars)
+
+	TrimCount := Round(Length_FinalBars/2)
+
+	StringTrimRight, FinalVolume_LeftHalf, FinalVolumeBars, TrimCount
+	StringTrimLeft, FinalVolume_RightHalf, FinalVolumeBars, TrimCount
+	
+	FinalVolume_Centered=%VolumeLevel_AfterEdits%`%
+
+	Padding_CenterLeft := A_Space A_Space A_Space A_Space A_Space A_Space
+	Padding_CenterRight := Padding_CenterLeft
+	If ( MasterMute == "On") {
+		Padding_CenterLeft := A_Space MuteIcon A_Space
+		Padding_CenterRight := A_Space MuteIcon A_Space
+	}
+	
+	ToolTip, 🔈  %FinalVolume_LeftHalf%[%Padding_CenterLeft%%FinalVolume_Centered%%Padding_CenterRight%]%FinalVolume_RightHalf%  🔊
+
+	ClearTooltip(750)
+
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Alt + Mouse-Wheel-Down
-;  ACTION:  Scroll down 15 wheel clicks
-;
-!WheelDown::
-	MouseClick,WheelDown,,,15,0,D,R
-	Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Alt + Mouse-Wheel-Up
-;  ACTION:  Scroll up 15 wheel clicks
+;  HOTKEY:  Alt + Mouse-Wheel Up/Down
+;  ACTION:  "SuperScroll" - scrolls 15 wheel-clicks at a time
 ;
 !WheelUp::
 	MouseClick,WheelUp,,,15,0,D,R
+	Return
+;
+!WheelDown::
+	MouseClick,WheelDown,,,15,0,D,R
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -963,7 +1096,7 @@ OpenVSCode() {
 	}
 	; WinGet, WinPID, PID, %WinTitle%
 	; WinGet, ProcessName, ProcessName, %WinTitle%
-	; WinGet, ProcessPath, ProcessPath, %WinTitle_%
+	; WinGet, ProcessPath, ProcessPath, %WinTitle%
 	; MsgBox, 0, Active Window Specs,
 	; 	(LTrim
 	; 		➣ A_Temp:   %A_Temp%
