@@ -1,12 +1,39 @@
 #!/bin/bash
-
+#
+# ------------------------------------------------------------
+#
 #   grep    print lines matching a pattern
-#     -r     perform a recursive search
-#     -R     perform a recursive search AND follow sym-links
-#     -n     get line number where a match was found
-#     -w     match whole word only
-#     -l     (lower-case L) show the file name, not the result itself
-#     -i     ignore case (perform a case-insensitive search)
+#    ...
+#      options
+#        -r     perform a recursive search
+#        -n     get line number where a match was found
+#        -l     (lower-case L) show the file name, not the result itself
+#    ...
+#      options (cont.)
+#        -R     perform a recursive search AND follow sym-links
+#        -w     match whole word only
+#        -i     ignore case (perform a case-insensitive search)
+#
+# ------------------------------------------------------------
+#
+# Example: Search syslogs for crontab edits
+#
+
+grep -rn /var/log/syslog* --regexp='crontab' | sort --numeric-sort;
+
+
+
+# ------------------------------------------------------------
+#
+# Example: Search [docker ps] to count the number of containers running
+#
+
+docker_instances_running=$(sudo docker ps --all | grep -c  '\<Up .* hours\>'); echo "docker_instances_running: ${docker_instances_running}";
+
+
+
+# ------------------------------------------------------------
+
 
 grep -rnl "/var/lib" -e "saveLog";
 grep -rnl "/var/lib" -e "/var/lib/php/session";
