@@ -13,8 +13,8 @@ function ExclusionsListUpdate {
 		[ValidateSet("Add","Get","Remove")]
 		[String]$Action = "Add",
 
-		[ValidateSet("Defender", "Windows Defender", "ESET", "Malwarebytes' Anti-Malware", "MalwareBytes' Anti-Ransomware", "MalwareBytes' Anti-Exploit")]
-		[String]$AntiVirusSoftware = "Windows Defender",
+		[ValidateSet($Null, "", "Defender", "Windows Defender", "ESET", "Malwarebytes' Anti-Malware", "MalwareBytes' Anti-Ransomware", "MalwareBytes' Anti-Exploit")]
+		[String]$AntiVirusSoftware,
 
 		[String[]]$ExcludedFilepaths = @(),
 		$ExcludedProcesses = @(),
@@ -26,10 +26,21 @@ function ExclusionsListUpdate {
 
 	)
 
-	If ($AntiVirusSoftware -eq "Defender") {
+	If ($AntiVirusSoftware -eq $Null) {
+		$AntiVirusSoftware = "Windows Defender";
+	} ElseIf ($AntiVirusSoftware -eq "") {
+		$AntiVirusSoftware = "Windows Defender";
+	} ElseIf ($AntiVirusSoftware -eq "Defender") {
 		$AntiVirusSoftware = "Windows Defender";
 	}
 
+	Write-Host "";
+	Write-Host "  Exclusions List Update  " -BackgroundColor ("Black") -ForegroundColor ("Green");
+	Write-Host "";
+	Write-Host "  Antivirus Software:  `"${AntiVirusSoftware}`"  " -BackgroundColor ("Black") -ForegroundColor ("Green");
+	Write-Host "";
+
+	
 	$FoundFilepaths = @();
 	$FoundExtensions = @();
 	$FoundProcesses = @();
@@ -42,9 +53,9 @@ function ExclusionsListUpdate {
 			$PSCommandArgs += $args[$i];
 			$i++;
 		}
-		$CommandString = "ExclusionsListUpdate -SkipExit";
+		$CommandString = "ExclusionsListUpdate";
 		If ($PSBoundParameters.ContainsKey('AntiVirusSoftware')) { 
-			$CommandString += ((" -AntiVirusSoftware ")+($AntiVirusSoftware));
+			$CommandString += ((" -AntiVirusSoftware '")+($AntiVirusSoftware)+("'"));
 		}
 		If ($PSBoundParameters.ContainsKey('Quiet')) { 
 			$CommandString += " -Quiet";
@@ -140,12 +151,12 @@ function ExclusionsListUpdate {
 		$UserProfile=(${Env:UserProfile});
 		$ExcludedFilepaths += ((${UserProfile})+("\Dropbox"));
 		# -- FILEPATHS (Environment-Based) -- OneDrive Synced Dir(s)
-		If (${Env:OneDrive} -ne $null) {
+		If (${Env:OneDrive} -ne $Null) {
 			$ExcludedFilepaths += ${Env:OneDrive};
 			$ExcludedFilepaths += (${Env:OneDrive}).replace("OneDrive - ","");
 		}
 		# -- FILEPATHS (Environment-Based) -- Cloud-Synced  :::  Sharepoint Synced Dir(s) / OneDrive-Shared Synced Dir(s)
-		If (${Env:OneDriveCommercial} -ne $null) {
+		If (${Env:OneDriveCommercial} -ne $Null) {
 			$ExcludedFilepaths += ${Env:OneDriveCommercial}; 
 			$ExcludedFilepaths += (${Env:OneDriveCommercial}).replace("OneDrive - ","");
 		}
@@ -163,43 +174,38 @@ function ExclusionsListUpdate {
 		# ------------------------------------------------------------
 		# -- PROCESSES -- LocalAppData
 		$ExcludedProcesses += @{ Dirname=${LocalAppData}; AddDir="Dropbox"; Depth=""; Parent=""; Basename="Dropbox.exe"; };
-		$ExcludedProcesses += @{ Dirname=${LocalAppData}; AddDir="GitHubDesktop"; Depth=""; Parent=""; Basename="GitHubDesktop.exe"; };
-		$ExcludedProcesses += @{ Dirname=${LocalAppData}; AddDir="GitHubDesktop"; Depth=""; Parent=""; Basename="GitHubDesktop.exe"; };
-		$ExcludedProcesses += @{ Dirname=${LocalAppData}; AddDir="GitHubDesktop"; Depth=""; Parent=""; Basename="git.exe"; };
-		$ExcludedProcesses += @{ Dirname=${LocalAppData}; AddDir="GitHubDesktop"; Depth=""; Parent=""; Basename="git-bash.exe"; };
-		$ExcludedProcesses += @{ Dirname=${LocalAppData}; AddDir="GitHubDesktop"; Depth=""; Parent=""; Basename="git-lfs.exe"; };
+		$ExcludedProcesses += @{ Dirname=${LocalAppData}; AddDir="GitHubDesktop"; Depth=""; Parent=""; Basename="git*.exe"; }; # Git, GitHubDesktop
+		$ExcludedProcesses += @{ Dirname=${LocalAppData}; AddDir="Google\Chrome"; Depth=""; Parent=""; Basename="software_reporter_tool.exe"; };
 		# -- PROCESSES -- ProgFiles X64
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="AutoHotkey"; Depth=""; Parent=""; Basename="AutoHotkey.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Classic Shell"; Depth=""; Parent=""; Basename="ClassicStartMenu.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="AutoHotkey"; Depth=""; Parent=""; Basename="Ahk2Exe.exe"; }; # AutoHotkey
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="AutoHotkey"; Depth=""; Parent=""; Basename="AutoHotkey*.exe"; }; # AutoHotkey
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Classic Shell"; Depth=""; Parent=""; Basename="ClassicStartMenu.exe"; };  # Classic Shell
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Cryptomator"; Depth=""; Parent=""; Basename="Cryptomator.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Dolby"; Depth=""; Parent=""; Basename="DolbyDAX2API.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="FileZilla FTP Client"; Depth=""; Parent=""; Basename="filezilla.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Git"; Depth=""; Parent=""; Basename="git.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Git"; Depth=""; Parent=""; Basename="git-lfs.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Git"; Depth=""; Parent=""; Basename="git-bash.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Git"; Depth=""; Parent=""; Basename="bash.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Git"; Depth=""; Parent=""; Basename="git*.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Git"; Depth=""; Parent=""; Basename="sh.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Greenshot"; Depth=""; Parent=""; Basename="Greenshot.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Mailbird"; Depth=""; Parent=""; Basename="CefSharp.BrowserSubprocess.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Mailbird"; Depth=""; Parent=""; Basename="Mailbird.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Mailbird"; Depth=""; Parent=""; Basename="MailbirdUpdater.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Mailbird"; Depth=""; Parent=""; Basename="Mailbird*.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Mailbird"; Depth=""; Parent=""; Basename="sqlite3.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Mailbird"; Depth=""; Parent=""; Basename="CefSharp.BrowserSubprocess.exe"; }; # Mailbird\x64\
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Malwarebytes"; Depth=""; Parent=""; Basename="mbam.exe"; }; # Malwarebytes
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Malwarebytes"; Depth=""; Parent=""; Basename="mbamtray.exe"; }; # Malwarebytes
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Malwarebytes"; Depth=""; Parent=""; Basename="mbamservice.exe"; }; # Malwarebytes
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Microsoft VS Code"; Depth=""; Parent=""; Basename="Code.exe"; }; # VS Code
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Microsoft VS Code"; Depth=""; Parent=""; Basename="rg.exe"; }; # VS Code
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="NVDisplay.Container.exe"; }; # NVIDIA
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="nvcontainer.exe"; }; # NVIDIA
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="nvsphelper64.exe"; }; # NVIDIA
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="NVIDIA GeForce Experience.exe"; }; # NVIDIA
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="NVIDIA Notification.exe"; }; # NVIDIA
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="NVIDIA Share.exe"; }; # NVIDIA
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="NvTelemetryContainer.exe"; }; # NVIDIA
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="NV*.exe"; }; # NVIDIA
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="PowerShell"; Depth="2"; Parent=""; Basename="pwsh.exe"; }; # PowerShell
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="Synaptics"; Depth=""; Parent=""; Basename="SynTPEnh*.exe"; }; # Synaptics
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="TortoiseGit"; Depth=""; Parent=""; Basename="TGitCache.exe"; }; # TortoiseGit
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="WindowsApps"; Depth=""; Parent=""; Basename="XboxApp.exe"; }; # Microsoft XB1
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="WindowsApps"; Depth=""; Parent=""; Basename="IGCCTray.exe"; }; # Intel Graphics
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX64}; AddDir="WindowsApps"; Depth=""; Parent=""; Basename="IGCC.exe"; }; # Intel Graphics
 		# -- PROCESSES -- ProgFiles X86
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Dropbox"; Depth=""; Parent=""; Basename="Dropbox.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="efs"; Depth="1"; Parent=""; Basename="search.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Google\Chrome"; Depth=""; Parent=""; Basename="chrome.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Intel"; Depth=""; Parent=""; Basename="DSAService.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Intel"; Depth=""; Parent=""; Basename="tbtsvc.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Intel"; Depth=""; Parent=""; Basename="Thunderbolt.exe"; };
@@ -209,7 +215,6 @@ function ExclusionsListUpdate {
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="LastPass"; Depth=""; Parent=""; Basename="nplastpass.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="LastPass"; Depth=""; Parent=""; Basename="WinBioStandalone.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="LastPass"; Depth=""; Parent=""; Basename="wlandecrypt.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Microsoft Office"; Depth=""; Parent=""; Basename="lync.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Microsoft Office"; Depth=""; Parent=""; Basename="EXCEL.EXE"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Microsoft Office"; Depth=""; Parent=""; Basename="lync.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Microsoft Office"; Depth=""; Parent=""; Basename="lync99.exe"; };
@@ -223,48 +228,41 @@ function ExclusionsListUpdate {
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Mobatek"; Depth=""; Parent=""; Basename="MobaXterm.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Notepad++"; Depth=""; Parent=""; Basename="notepad++.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="NVIDIA Corporation"; Depth=""; Parent=""; Basename="NVIDIA Web Helper.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="Razer Central.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="Razer Updater.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="RazerCentralService.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="GameManagerService.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="GameManagerServiceStartup.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="Razer Synapse Service.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="Razer Synapse Service Process.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="Razer Synapse 3.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer Chroma SDK"; Depth=""; Parent=""; Basename="RzChromaAppManager.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer Chroma SDK"; Depth=""; Parent=""; Basename="RzSDKClient.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer Chroma SDK"; Depth=""; Parent=""; Basename="RzSDKClientS.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer Chroma SDK"; Depth=""; Parent=""; Basename="RzSDKServer.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer Chroma SDK"; Depth=""; Parent=""; Basename="RzSDKService.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Splashtop"; Depth=""; Parent=""; Basename="SSUService.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="CefSharp.BrowserSubprocess.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="GameManagerService*.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer"; Depth=""; Parent=""; Basename="Razer*.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Razer Chroma SDK\bin"; Depth="1"; Parent=""; Basename="Rz*.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Reflector 3"; Depth=""; Parent=""; Basename="Reflector3.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Splashtop"; Depth=""; Parent=""; Basename="SRService.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Splashtop"; Depth=""; Parent=""; Basename="SSUService.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Splashtop"; Depth=""; Parent=""; Basename="strwinclt.exe"; };
 		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="Unigine"; Depth=""; Parent=""; Basename="Heaven.exe"; };
-		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="WinDirStat"; Depth=""; Parent=""; Basename="windirstat.exe"; };
+		$ExcludedProcesses += @{ Dirname=${ProgFilesX86}; AddDir="WinDirStat"; Depth="1"; Parent=""; Basename="windirstat.exe"; };
 		# -- PROCESSES -- ProgData
 		# $ExcludedProcesses += ((${ProgData})+("\..."));
 		# -- PROCESSES -- Sys32
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="ApplicationFrameHost.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="BackgroundTransferHost.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="DbxSvc.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="ApplicationFrameHost.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="BackgroundTransferHost.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="DbxSvc.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="dwm.exe"; }; # Desktop Window Manager
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="fontdrvhost.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="lsass.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="mmc.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="rundll32.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="RuntimeBroker.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="SearchIndexer.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="Taskmgr.exe"; };
 		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="DriverStore\FileRepository"; Depth=""; Parent=""; Basename="igfxEM.exe"; };
 		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="DriverStore\FileRepository"; Depth=""; Parent=""; Basename="IntelCpHDCPSvc.exe"; };
 		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="DriverStore\FileRepository"; Depth=""; Parent=""; Basename="IntelCpHeciSvc.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="DriverStore\FileRepository"; Depth=""; Parent=""; Basename="igfxEM.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="dwm.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="fontdrvhost.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="lsass.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="mmc.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="RuntimeBroker.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="SearchIndexer.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth=""; Parent=""; Basename="taskmgr.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="wbem"; Depth=""; Parent=""; Basename="unsecapp.exe"; };
-		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="wbem"; Depth=""; Parent=""; Basename="WmiPrvSE.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="wbem"; Depth="1"; Parent=""; Basename="unsecapp.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="wbem"; Depth="1"; Parent=""; Basename="WmiPrvSE.exe"; };
+		$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="WindowsPowerShell\v1.0"; Depth="1"; Parent=""; Basename="powershell.exe"; };
 		# -- PROCESSES -- SysDrive
 		$ExcludedProcesses += @{ Dirname=${SysDrive}; AddDir="ProgramData\Microsoft\Windows Defender\Platform"; Depth=""; Parent=""; Basename="MsMpEng.exe"; };
 		$ExcludedProcesses += @{ Dirname=${SysDrive}; AddDir="ProgramData\Microsoft\Windows Defender\Platform"; Depth=""; Parent=""; Basename="NisSrv.exe"; };
 		# -- PROCESSES -- SysRoot
-		$ExcludedProcesses += @{ Dirname=${SysRoot}; AddDir=""; Depth="0"; Parent=""; Basename="explorer.exe"; };
+		$ExcludedProcesses += @{ Dirname=${SysRoot}; AddDir=""; Depth="1"; Parent=""; Basename="explorer.exe"; };
 		# -- PROCESSES -- UserProfile
 		$ExcludedProcesses += @{ Dirname=${UserProfile}; AddDir="Documents\MobaXterm"; Depth=""; Parent=""; Basename="Motty.exe"; };
 		# ------------------------------------------------------------
@@ -272,7 +270,7 @@ function ExclusionsListUpdate {
 		#		APPLY THE EXCLUSIONS
 		#
 		$ExcludedFilepaths | Select-Object -Unique | ForEach-Object {
-			If ($_ -ne $null) {
+			If ($_ -ne $Null) {
 				If (Test-Path $_) {
 					$FoundFilepaths += $_;
 				}
@@ -291,7 +289,7 @@ function ExclusionsListUpdate {
 			}
 		}
 		$ExcludedExtensions | Select-Object -Unique | ForEach-Object {
-			If ($_ -ne $null) {
+			If ($_ -ne $Null) {
 				$FoundExtensions += $_;
 				If ($AntiVirusSoftware -eq "Windows Defender") {
 					Add-MpPreference -ExclusionExtension "$_";
@@ -305,15 +303,14 @@ function ExclusionsListUpdate {
 		}
 		# Determine which process(es) exist locally
 		$ExcludedProcesses | ForEach-Object {
-			If ($_ -ne $null) {
+			If ($_ -ne $Null) {
 				$Each_Dirname = $_.Dirname;
 				If ($_.AddDir -ne "") {
 					$Each_Dirname = (($_.Dirname)+("\")+($_.AddDir));
 				}
 				$Each_Basename = $_.Basename;
-				$Each_Parent = If (($_.Parent -ne $null) -And ($_.Parent -ne ""))  { $_.Parent } Else { "" };
-				$Each_Depth = If (($_.Depth -ne $null) -And ($_.Depth -ne ""))  { [Int]$_.Depth } Else { "" };
-
+				$Each_Parent = If (($_.Parent -ne $Null) -And ($_.Parent -ne ""))  { $_.Parent } Else { "" };
+				$Each_Depth = If (($_.Depth -ne $Null) -And ($_.Depth -ne ""))  { [Int]$_.Depth } Else { "" };
 				If ((Test-Path $Each_Dirname) -And ($Each_Basename -ne "")) {
 					If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host "Searching `"${Each_Dirname}`" for `"${Each_Basename}`"..."; }
 					If ($Each_Parent -eq "") {
@@ -331,28 +328,22 @@ function ExclusionsListUpdate {
 						} Else {
 							# Matching on [ top level directory ], [ basename ], [ parent directory name ] & [ depth ]
 							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -Depth ($Each_Depth) -File -Recurse -Force -ErrorAction "SilentlyContinue" | Where-Object { $_.Directory.Name -Eq "$Each_Parent" } | Foreach-Object { $_.FullName; });
-
 						}
 					}
 				}
 			}
 		}
-
 		# ------------------------------------------------------------
 		#
 		#		REVIEW FINAL EXCLUSIONS-LIST (before applying them)
 		#
 		#
 		#
-		If (!($PSBoundParameters.ContainsKey('Quiet'))) { 
+		If (!($PSBoundParameters.ContainsKey('Quiet'))) {
 			Write-Host "`nExclusions - Extensions:"; If ($FoundExtensions -eq $Null) { Write-Host "None"; } Else { $FoundExtensions; }
 			Write-Host "`nExclusions - Filepaths (which exist locally):"; If ($FoundFilepaths -eq $Null) { Write-Host "None"; } Else { $FoundFilepaths; }
 			Write-Host "`nExclusions - Processes (which exist locally):"; If ($FoundProcesses -eq $Null) { Write-Host "None"; } Else { $FoundProcesses; }
 			Write-Host "`n";
-			$WaitCloseSeconds = 60;
-			Write-Host "`nClosing after ${WaitCloseSeconds}s...";
-			Write-Host "`n";
-			Start-Sleep -Seconds ${WaitCloseSeconds};
 		}
 		#
 		#
@@ -364,18 +355,16 @@ function ExclusionsListUpdate {
 		#
 		If ($AntiVirusSoftware -eq "ESET") {
 			$PreExportFilepath = ((${Env:USERPROFILE})+("\Desktop\eset-export.xml"));
-			ESET_ExportModifier -PreExportFilepath ($PreExportFilepath) -ESET_ExcludeFilepaths ($FoundFilepaths) -ESET_ExcludeExtensions ($FoundExtensions) -ESET_ExcludeProcesses ($FoundProcesses);
-
-		} 
-
+			$ExitCode = ESET_ExportModifier -PreExportFilepath ($PreExportFilepath) -ESET_ExcludeFilepaths ($FoundFilepaths) -ESET_ExcludeExtensions ($FoundExtensions) -ESET_ExcludeProcesses ($FoundProcesses);
+		}
 		# ------------------------------------------------------------
 		#
 		# Windows Defender Exclusions
 		#		Apply directly via PowerShell built-in command(s)
 		#
 		If ($AntiVirusSoftware -eq "Windows Defender") {
-
-			$FoundProcesses | ForEach-Object {
+			$FoundProcesses | Select-Object -Unique | ForEach-Object {
+				If (!($PSBoundParameters.ContainsKey('Quiet'))) { Write-Host "Adding Defender Process-Exclusion: `"$_`"..."; }
 				Add-MpPreference -ExclusionProcess "$_";
 				If ($? -eq $True) {
 					If ($PSBoundParameters.ContainsKey('Verbose')) { Write-Host (("Successfully added exclusion for process   [ ")+($_)+(" ]")); }
@@ -387,15 +376,18 @@ function ExclusionsListUpdate {
 					}
 				}
 			}
-
-			$LiveWD = Get-MpPreference;
+			$LiveWD = (Get-MpPreference);
 			Write-Host "`nWindows Defender (Live Exclusions) - Filepaths:"; If ($LiveWD.ExclusionPath -eq $Null) { Write-Host "None"; } Else { $LiveWD.ExclusionPath; }
 			Write-Host "`nWindows Defender (Live Exclusions) - Processes:"; If ($LiveWD.ExclusionProcess -eq $Null) { Write-Host "None"; } Else { $LiveWD.ExclusionProcess; }
 			Write-Host "`nWindows Defender (Live Exclusions) - File-Extensions:"; If ($LiveWD.ExclusionExtension -eq $Null) { Write-Host "None"; } Else { $LiveWD.ExclusionExtension; }
-
 		}
+		#
 		# ------------------------------------------------------------
 		#
+		$WaitCloseSeconds = 60;
+		Write-Host "`nClosing after ${WaitCloseSeconds}s...";
+		Write-Host "`n";
+		Start-Sleep -Seconds ${WaitCloseSeconds};
 	}
 }
 Export-ModuleMember -Function "ExclusionsListUpdate";
@@ -410,7 +402,7 @@ function ESET_ExportModifier {
 	Param(
 
 		[String]$PreExportFilepath,
-		
+
 		[String[]]$ESET_ExcludeFilepaths = @(),
 
 		[String[]]$ESET_ExcludeProcesses = @(),
@@ -420,26 +412,20 @@ function ESET_ExportModifier {
 	)
 
 	If ((Test-Path -Path ("$PreExportFilepath")) -eq $False) {
-
 		Write-Host "";
-		Write-Host "  Error in function `"ESET_ExportModifier`"  " -BackgroundColor ("Black") -ForegroundColor ("Red");
-		Write-Host "    Please go to ESET and Export current config to: `"$PreExportFilepath`"    " -BackgroundColor ("Black") -ForegroundColor ("Red");
+		Write-Host "  Error in function `"ESET_ExportModifier`"  " -BackgroundColor ("Black") -ForegroundColor ("Yellow");
+		Write-Host "";
+		Write-Host "    Please go to ESET > 'Setup' > 'Import/Export Settings' > 'Export settings' to path: `n`n    $PreExportFilepath    `n`n" -BackgroundColor ("Black") -ForegroundColor ("Yellow");
 		Write-Host "";
 		Return 1;
-
 	} Else {
-		
-
 		$Dirname_ESET_Import = ((${Env:USERPROFILE})+("\Desktop\eset-import"));
 		$Basename_ESET_Import = (("eset-import_")+(Get-Date -UFormat "%Y%m%d-%H%M%S")+(".xml"));
 		$Filepath_ESET_Import = (($Dirname_ESET_Import)+("\")+($Basename_ESET_Import));
-		
 		If ((Test-Path -Path ($Dirname_ESET_Import)) -eq $false) {
 			New-Item -ItemType "Directory" -Path ($Dirname_ESET_Import) | Out-Null;
 		}
-
 		Set-Content -Path ($Filepath_ESET_Import) -Value (Get-Content -Path ("$PreExportFilepath"));
-
 		#
 		# ------------------------------------------------------------
 		#
@@ -449,8 +435,8 @@ function ESET_ExportModifier {
 		$RowsStart_Processes = "";
 		$RowsBetween_Processes = "";
 		$RowsEnd_Processes = "";
-		$FoundStart_Processes = $null;
-		$FoundEnd_Processes = $null;
+		$FoundStart_Processes = $Null;
+		$FoundEnd_Processes = $Null;
 		$RegexStart_Processes = '^     <ITEM NAME="ExcludedProcesses" DELETE="1">$';
 		$RegexEnd_Processes = '^     </ITEM>$';
 		#
@@ -470,8 +456,8 @@ function ESET_ExportModifier {
 		$RowsStart_Filepaths = "";
 		$RowsBetween_Filepaths = "";
 		$RowsEnd_Filepaths = "";
-		$FoundStart_Filepaths = $null;
-		$FoundEnd_Filepaths = $null;
+		$FoundStart_Filepaths = $Null;
+		$FoundEnd_Filepaths = $Null;
 		$RegexStart_Filepaths = '^     <ITEM NAME="ScannerExcludes" DELETE="1">$';
 		$RegexEnd_Filepaths = '^     </ITEM>$';
 		#
@@ -523,13 +509,13 @@ function ESET_ExportModifier {
 		#
 		$i_RowNum = 0;
 		Get-Content -Path ($Filepath_ESET_Import) | Select-Object | ForEach-Object {
-			If ($FoundStart_Processes -eq $null) {
+			If ($FoundStart_Processes -eq $Null) {
 				$RowsStart_Processes = (($RowsStart_Processes)+("`n")+($_));
 				If (([Regex]::Match($_, $RegexStart_Processes)).Success -eq $True) {
 					$FoundStart_Processes = $i_RowNum;
 				}
 			} Else {
-				If ($FoundEnd_Processes -ne $null) {
+				If ($FoundEnd_Processes -ne $Null) {
 					$RowsEnd_Processes = (($RowsEnd_Processes)+("`n")+($_));
 				} ElseIf (([Regex]::Match($_, $RegexEnd_Processes)).Success -eq $True) {
 					$RowsEnd_Processes = (($RowsEnd_Processes)+("`n")+($_));
@@ -558,13 +544,13 @@ function ESET_ExportModifier {
 		#
 		$i_RowNum = 0;
 		Get-Content -Path ($Filepath_ESET_Import) | Select-Object | ForEach-Object {
-			If ($FoundStart_Filepaths -eq $null) {
+			If ($FoundStart_Filepaths -eq $Null) {
 				$RowsStart_Filepaths = (($RowsStart_Filepaths)+("`n")+($_));
 				If (([Regex]::Match($_, $RegexStart_Filepaths)).Success -eq $True) {
 					$FoundStart_Filepaths = $i_RowNum;
 				}
 			} Else {
-				If ($FoundEnd_Filepaths -ne $null) {
+				If ($FoundEnd_Filepaths -ne $Null) {
 					$RowsEnd_Filepaths = (($RowsEnd_Filepaths)+("`n")+($_));
 				} ElseIf (([Regex]::Match($_, $RegexEnd_Filepaths)).Success -eq $True) {
 					$RowsEnd_Filepaths = (($RowsEnd_Filepaths)+("`n")+($_));
@@ -582,10 +568,7 @@ function ESET_ExportModifier {
 				$Contents_ESET_Import = $Contents_ESET_Import.Replace("`n`n", "`n");
 		$Contents_ESET_Import = $Contents_ESET_Import.Trim();
 		#
-		#
 		Set-Content -Path ($Filepath_ESET_Import) -Value ($Contents_ESET_Import);
-		#
-		#
 		#
 		# ------------------------------------------------------------
 		#
