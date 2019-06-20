@@ -12,7 +12,7 @@ function GitSyncAll {
 
 		[String]$Directory = ("${HOME}"),
 
-		[Int]$Depth = 250,
+		[Int]$Depth = 3,
 
 		[ValidateSet("Fetch","Pull")]
 		[String]$Action = "Pull",
@@ -56,7 +56,10 @@ function GitSyncAll {
 
 		$VerbiageRepositoryCount = If($RepoFullpathsArr.Length -eq 1) { "repository" } Else { "repositories" };
 		
-		Write-Host (("`nFound ")+($RepoFullpathsArr.Length)+(" ")+($VerbiageRepositoryCount)+("."));
+		Write-Host (("`nFound ")+($RepoFullpathsArr.Length)+(" ")+($VerbiageRepositoryCount)+(":"));
+		Write-Host "";
+		$RepoFullpathsArr.FullName | Format-List;
+		Write-Host "`n`n";
 
 		ForEach ($EachRepoDir in $RepoFullpathsArr) {
 
@@ -116,30 +119,37 @@ function GitSyncAll {
 				Write-Host "Fetch complete." -ForegroundColor Green;
 
 			} Else {
-				Write-Host "Unhandled Value for Parameter `$Action: `"${Action}`" " -BackgroundColor Black -ForegroundColor Red;
+				Write-Host "Unhandled Value for Parameter `$Action: `"${Action}`" " -BackgroundColor "Black" -ForegroundColor "Red";
 
 			}
 		}
 		Write-Host "";
 
 	} Else {
-		Write-Host "No git repositories found in: `"${Directory}`"`n" -ForegroundColor Magenta;
+		Write-Host "No git repositories found in: `"${Directory}`"`n" -ForegroundColor "Magenta";
 	}
 
-	Write-Host "`n`n  All Repositories Synced  `n`n" -ForegroundColor green;
-	Write-Host -NoNewLine "  Closing in ";
-	$SecondsTilAutoExit = 30;
-	While ($SecondsTilAutoExit -gt 0) {
-		Write-Host -NoNewLine ($SecondsTilAutoExit);
-		$MillisecondsRemaining = 1000;
-		While ($MillisecondsRemaining -gt 0) {
-			$WaitMilliseconds = 250;
-			$MillisecondsRemaining -= $WaitMilliseconds;
-			[Threading.Thread]::Sleep($WaitMilliseconds);
-			Write-Host -NoNewLine ".";
-		}
-		$SecondsTilAutoExit--;
+	Write-Host "`n`n  All Repositories Synced" -ForegroundColor "Green";
+	
+	Write-Host -NoNewLine "`n`n  Press the 'Escape' key to exit...`n`n" -BackgroundColor "Black" -ForegroundColor "Yellow";
+	$KeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+	While ($KeyPress.VirtualKeyCode -ne 27) {
+		$KeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
 	}
+
+	# Write-Host -NoNewLine "  Closing in ";
+	# $SecondsTilAutoExit = 30;
+	# While ($SecondsTilAutoExit -gt 0) {
+	# 	Write-Host -NoNewLine ($SecondsTilAutoExit);
+	# 	$MillisecondsRemaining = 1000;
+	# 	While ($MillisecondsRemaining -gt 0) {
+	# 		$WaitMilliseconds = 250;
+	# 		$MillisecondsRemaining -= $WaitMilliseconds;
+	# 		[Threading.Thread]::Sleep($WaitMilliseconds);
+	# 		Write-Host -NoNewLine ".";
+	# 	}
+	# 	$SecondsTilAutoExit--;
+	# }
 
 }
 

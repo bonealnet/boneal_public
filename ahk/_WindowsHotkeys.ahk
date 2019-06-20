@@ -50,13 +50,34 @@ GroupAdd, Explorer, ahk_class CabinetWClass
 ;
 ;	Tooltip clearing tool(s)
 ;
-RemoveToolTip:
+RemoveToolTip() {
 	ToolTip
-	return
+	Return
+}
 ;
-ClearTooltip(Timeout) {
-	SetTimer, RemoveToolTip, -%Timeout%
-	return
+ClearTooltip(TimerPeriod) {
+	; If SetTimer's Period...
+	;			 |--> is positive, it repeats its command until explicitly cancelled
+	;			 |--> is negative, it only runs its command once
+	SetTimer, RemoveToolTip, -%TimerPeriod%
+	Return
+}
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+;	SplashText clearing tool(s)
+;
+RemoveSplashText() {
+	SplashTextOff
+	Return
+}
+;
+ClearSplashText(TimerPeriod) {
+	; If SetTimer's Period...
+	;			 |--> is positive, it repeats its command until explicitly cancelled
+	;			 |--> is negative, it only runs its command once
+	SetTimer, RemoveSplashText, -%TimerPeriod%
+	Return
 }
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,7 +124,7 @@ ClearTooltip(Timeout) {
 	GUI_ROWCOUNT := 12
 	GUI_WIDTH := 1000
 
-	Gui, Add, ListView, r%GUI_ROWCOUNT% w%GUI_WIDTH% gMyListView, Key|Val
+	Gui, Add, ListView, r%GUI_ROWCOUNT% w%GUI_WIDTH% gOnDoubleClick_DestroyGui, Key|Val
 
 	LV_Add("", "Title", WinTitle)
 	LV_Add("", "Class", WinClass)
@@ -122,15 +143,17 @@ ClearTooltip(Timeout) {
 
 	; Display the window and return. The script will be notified whenever the user double clicks a row.
 	Gui, Show
-
-	MyListView:
-	if (A_GuiEvent = "DoubleClick") {
-		Gui, Destroy
-		; LV_GetText(RowText, A_EventInfo)  ; Get the text from the row's first field.
-		; ToolTip You double-clicked row number %A_EventInfo%. Text: "%RowText%"
-	}
 	Return
 ;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+;	@	OnDoubleClick_DestroyGui  -->  Built as a 'g....' callback for Gui-window doubleclick
+;
+OnDoubleClick_DestroyGui() {
+if (A_GuiEvent = "DoubleClick") {
+	Gui, Destroy
+}
+}
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;   HOTKEY:  Win + -
 ;		ACTION:  Type a line of -----'s
@@ -350,14 +373,20 @@ StringRepeat(StrToRepeat, Multiplier) {
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
 +#F2::   ; +#F2 / [ Shift + Win + F2 ] -- Show all (current) Window Titles
+	Gui, Add, ListView, r50 w1000 gOnDoubleClick_DestroyGui, WindowTitle
 	WinGet, Window, List
 	Loop %Window% {
 		Id:=Window%A_Index%
 		WinGetTitle, TVar , % "ahk_id " Id
-		Window%A_Index%:=TVar ;use this if you want an array
-		tList.=TVar "`n" ;use this if you just want the list
+		If (Tvar != "") {
+			LV_Add("", TVar)
+			Window%A_Index%:=TVar ;use this if you want an array
+			tList.=TVar "`n" ;use this if you just want the list
+		}
 	}
-	MsgBox %tList%
+	; Gui, Add, Text,, %tList%
+	Gui, Show
+	; MsgBox %tList%
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -373,31 +402,30 @@ StringRepeat(StrToRepeat, Multiplier) {
 ;
 #[::
 #]::
-
 	CoordMode,Mouse,Screen
 	SetDefaultMouseSpeed, 0
 	SetControlDelay, -1
 	SetTitleMatchMode, 1
+	; Save current monitor config (to compare against once it's been updated)
 	SysGet, MonitorCountBefore, MonitorCount
 	SysGet, ViewportWidthBefore, 78
 	SysGet, ViewportHeightBefore, 79
-
+	; Save current mouse coordinates
 	MouseGetPos, MouseX, MouseY
-
+	; Send an Escape keypress to close any old Projection menus
+	Send {Escape}
+	Sleep 250
 	If (A_OSVersion="WIN_7") {
-
 		; Windows7
-
-		If (A_ThisHotkey=="^#[") { ; Duplicate Monitors
+		If (A_ThisHotkey=="^#[") {
+			; Duplicate Monitors
 			x_loc := 874
 			y_loc := 520
-		} Else If (A_ThisHotkey=="^#]") { ; Extend Monitors
+		} Else If (A_ThisHotkey=="^#]") {
+			; Extend Monitors
 			x_loc := 1044
 			y_loc := 520
 		}
-
-		Send {Escape}
-		Sleep 250
 		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
 		Sleep 1000
 		MouseClick, Left, %x_loc%, %y_loc%
@@ -406,67 +434,50 @@ StringRepeat(StrToRepeat, Multiplier) {
 	} Else If (substr(A_OSVersion, 1, 4)="10.0") {
 
 		; Windows10
-
-		If (A_ThisHotkey=="^#[") { ; Duplicate Monitors
-			x_loc := (A_ScreenWidth - 20)
-			y_loc := 210
-		} Else If (A_ThisHotkey=="^#]") { ; Extend Monitors
-			x_loc := (A_ScreenWidth - 20)
-			y_loc := 315
-		}
-
-		Sleep 250
 		Send {LWin up}{RWin up}{LWin down}{p}{LWin up}
-
+		Sleep 250
 		StartMilliseconds := A_TickCount
-
 		Loop {
-
 			LoopingForMilliseconds := (A_TickCount-StartMilliseconds)
-
 			WinGetTitle, WinTitle, A
 			WinGetClass, WinClass, A
-
 			If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
-
-				; Windows-Projection menu detected --> select related option (duplicate/extend)
+				; Projection menu detected --> select related option (duplicate/extend)
 				Sleep 250
+				If (A_ThisHotkey=="#[") {
+					; Duplicate Monitors
+					x_loc := (A_ScreenWidth - 20)
+					y_loc := 210
+				} Else If (A_ThisHotkey=="#]") {
+					; Extend Monitors
+					x_loc := (A_ScreenWidth - 20)
+					y_loc := 315
+				}
+				; Select Projection menu option
 				MouseClick, Left, %x_loc%, %y_loc%
-
 				; Wait until the new monitor layout is loaded
-				Loop 500 {
-					Sleep 10
+				Loop 30 {
+					Sleep 100
 					SysGet, MonitorCountAfter, MonitorCount
 					If (MonitorCountAfter != MonitorCountBefore) {
 						Break
 					}
 				}
-
-				; WinGetTitle, WinTitle, A
-				; WinGetClass, WinClass, A
-				; If ((WinTitle = "Project") && (WinClass = "Windows.UI.Core.CoreWindow")) {
-				; 	Send {Escape}
-				; } Else {
-				; 	MouseClick, Left, 50, A_ScreenHeight
-				; }
-				Sleep 500
+				; Click outside of the Projection menu to close it
+				MouseClick, Left, %MouseX%, %MouseY%
+				Sleep 100
+				; Send an Escape keypress to ensure the Projection menu closes
 				Send {Escape}
-				Sleep 10
-
+				Sleep 100
 				Break
-
 			} Else If (LoopingForMilliseconds > 2000) {
-
 				MsgBox, 
 				(LTrim
 					Error - Unable to locate Projection window
 				)
 				Break
-
 			} Else {
-
 				Sleep 10
-
 			}
 		}
 	}
@@ -574,14 +585,17 @@ CapsLock::
 ;  ACTION:  Turn computer volume up/down
 ;
 #MButton::
+^#MButton::
 #WheelUp::
 ^#WheelUp::
 #WheelDown::
 ^#WheelDown::
 
-	MuteIcon=🔇
+	Icon_LowVolume=🔈
+	Icon_MuteVolume=🔇
+	Icon_HighVolume=🔊
 
-	VolumeLevel_Increment := 3
+	VolumeLevel_Increment := 10
 
 	Volume_ForceUpperLimit := 25
 
@@ -589,62 +603,82 @@ CapsLock::
 
 	VolumeLevel_BeforeEdits := Round(VolumeLevel_BeforeEdits)
 
-	If (A_ThisHotkey=="#MButton") { ; Volume mute
+	If (A_ThisHotkey=="#MButton") {
+		; Mute
 		SoundSet, +1, , MUTE
-
-	} Else If (A_ThisHotkey=="#WheelUp") { ; Volume up
+	} Else If (A_ThisHotkey=="^#MButton") {
+		; Mute (repeat w/ new hotkey)
+		SoundSet, +1, , MUTE
+	} Else If (A_ThisHotkey=="#WheelUp") {
+		; Up
 		SoundSet,+%VolumeLevel_Increment%
-
-	} Else If (A_ThisHotkey=="^#WheelUp") { ; Volume up
-		VolumeLevel_Increment := ( VolumeLevel_Increment * 2 )
-		SoundSet,+%VolumeLevel_Increment%
-
-	} Else If (A_ThisHotkey=="#WheelDown") { ; Volume Down
+	} Else If (A_ThisHotkey=="^#WheelUp") {
+		; Up (faster/slow)
+		NewVolumeLevel_Increment := ( VolumeLevel_Increment / 2 )
+		SoundSet,+%NewVolumeLevel_Increment%
+	} Else If (A_ThisHotkey=="#WheelDown") {
+		; Down
 		SoundSet,-%VolumeLevel_Increment%
-
-	} Else If (A_ThisHotkey=="^#WheelDown") { ; Volume Down
-		VolumeLevel_Increment := ( VolumeLevel_Increment * 2 )
-		SoundSet,-%VolumeLevel_Increment%
-		
+	} Else If (A_ThisHotkey=="^#WheelDown") {
+		; Down (faster/slow)
+		NewVolumeLevel_Increment := ( VolumeLevel_Increment / 2 )
+		SoundSet,-%NewVolumeLevel_Increment%
 	}
-	
-	SoundGet, VolumeLevel_AfterEdits
+	; Get the volume & mute current-settings
+	SoundGet, NewVolumeLevel
 	SoundGet, MasterMute, , MUTE
-
-	VolumeLevel_AfterEdits := Round(VolumeLevel_AfterEdits)
-
-	DingbatCount_MaxVolume := 20
-
-	VolumeBarsCount := Round( ( VolumeLevel_AfterEdits/100 ) * DingbatCount_MaxVolume)
+	; Final volume level
+	NewVolumeLevel := Round(NewVolumeLevel)
+	NewVolumeLevelPercentage=%NewVolumeLevel%`%
+	; Build the volume-bars (out-of dingbats utf8+ icons)
+	DingbatCount_MaxVolume := Round( ( 100 / VolumeLevel_Increment ) * 2 )
+	VolumeBarsCount   := Round( ( NewVolumeLevel / 100 ) * DingbatCount_MaxVolume)
 	VolumeSpacesCount := DingbatCount_MaxVolume - VolumeBarsCount
-
-	VolumeBars := StringRepeat("⬛️",VolumeBarsCount)
+	VolumeBars   := StringRepeat("⬛️",VolumeBarsCount)
 	VolumeSpaces := StringRepeat("⬜️",VolumeSpacesCount)
-
-	;# ▪️◾◼️⬛️
-	;# ▫️️◽️◻️️⬜️
-
 	FinalVolumeBars := VolumeBars VolumeSpaces
 	Length_FinalBars := StrLen(FinalVolumeBars)
-
 	TrimCount := Round(Length_FinalBars/2)
-
 	StringTrimRight, FinalVolume_LeftHalf, FinalVolumeBars, TrimCount
 	StringTrimLeft, FinalVolume_RightHalf, FinalVolumeBars, TrimCount
-	
-	FinalVolume_Centered=%VolumeLevel_AfterEdits%`%
-
+	; Prep the padding around the Volume Pentage
+	Padding_CenterTopBot=------
 	Padding_CenterLeft := A_Space A_Space A_Space A_Space A_Space A_Space
 	Padding_CenterRight := Padding_CenterLeft
 	If ( MasterMute == "On") {
-		Padding_CenterLeft := A_Space MuteIcon A_Space
-		Padding_CenterRight := A_Space MuteIcon A_Space
+		Padding_CenterLeft := A_Space Icon_MuteVolume A_Space
+		Padding_CenterRight := A_Space Icon_MuteVolume A_Space
 	}
+	Padding_CenterTopBot=%Padding_CenterTopBot%--
+	If (NewVolumeLevel < 100) {
+		Padding_CenterLeft := Padding_CenterLeft A_Space
+		Padding_CenterRight := A_Space Padding_CenterRight
+		If (NewVolumeLevel < 10) {
+			Padding_CenterLeft := Padding_CenterLeft A_Space
+			Padding_CenterRight := A_Space Padding_CenterRight
+		}
+	}
+	VolumeReplacement := StringRepeat(" ",30)
+	Output_TopLine=%Icon_LowVolume%   %FinalVolume_LeftHalf% %VolumeReplacement% %FinalVolume_RightHalf%  %Icon_HighVolume%
+	Output_MidLine=%Icon_LowVolume%   %FinalVolume_LeftHalf%≡≡%Padding_CenterLeft%%NewVolumeLevelPercentage%%Padding_CenterRight%≡≡%FinalVolume_RightHalf%  %Icon_HighVolume%
+	Output_BotLine=%Icon_LowVolume%   %FinalVolume_LeftHalf% %VolumeReplacement% %FinalVolume_RightHalf%  %Icon_HighVolume%
+
+	OutputTextLen := ( StrLen(Output_MidLine) - 2 )
+	OutputBlanks := StringRepeat(" ",95)
+	OutputBlankLine := Icon_LowVolume OutputBlanks Icon_HighVolume
+
+	Output_Combined=%Output_TopLine%`n%Output_MidLine%`n%Output_BotLine%
 	
-	ToolTip, 🔈  %FinalVolume_LeftHalf%[%Padding_CenterLeft%%FinalVolume_Centered%%Padding_CenterRight%]%FinalVolume_RightHalf%  🔊
-
+	OutputWidth := 317
+	OutputHeight := 20
+	StartMenuHeight := 40
+	; Show the output as a tooltip
+	x_loc := Round( ( A_ScreenWidth - OutputWidth ) / 2 )
+	y_loc := Round( ( A_ScreenHeight - StartMenuHeight - OutputHeight ) / 2 )
+	; y_loc := 50
+	; y_loc := ( A_ScreenHeight - ( OutputHeight * 3 ) )
+	ToolTip, %Output_Combined%, %x_loc%, %y_loc%
 	ClearTooltip(750)
-
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -675,15 +709,20 @@ WheelRight::
 ;  ACTION:  Chrome - Open a New Instance of Google Chrome
 ;
 #C::
-	; OpenChrome()
-	; Loop 99 {
-	; Loop 49 {
-	Loop 24 {
-		Send {TAB}
-		Sleep 10
-		Send {SPACE}
-		Sleep 10
-	}
+	; ------------------------------------------------------------
+	OpenChrome()
+	; TabSpace_Loop(50)
+	Return
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Ctrl + Win + C
+;  ACTION:  Workbench hotkey for quick-testing, one-time wizbangs, etc.
+;
+^#C::
+	; WinTitle=Task Scheduler
+	; WinTitle=Visual Studio Code
+	; SpaceUp_Loop(50, WinTitle)
+	SpaceUp_Loop(50)
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1017,20 +1056,76 @@ LShift & RShift::
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  @  OpenChrome - Opens the application "Visual Studio Code"
+;	@  OpenChrome - Opens the application "Visual Studio Code"
 OpenChrome() {
 	OPEN_TO_URL = www.google.com
 	Run % "chrome.exe" ( winExist("ahk_class Chrome_WidgetWin_1") ? " --new-window " : " " ) OPEN_TO_URL
-	return
+	Return
 }
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  @  OpenVisualStudio - Opens the application "Visual Studio Code"
+;	@  OpenVisualStudio - Opens the application "Visual Studio Code"
 OpenVisualStudio() {
 	TargetExe := "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\IDE\devenv.exe"
 	Run % TargetExe
-	return
+	Return
 }
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;	@ TabSpace_Loop
+;			Designed for Samsung SmartThings' Web-IDE where (sometimes) multiple hundreds of
+;			checkboxes need to be selected individually to update from a Git repo
+TabSpace_Loop(LoopIterations) {
+	Loop %LoopIterations% {
+		Send {Tab}
+		Sleep 10
+		Send {Space}
+		Sleep 10
+	}
+	Return
+}
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;	@ SendSpace
+;			For some reason, windows 10 doesn't like Send {Space} (as-in it 'ignores' the
+;			keypress), but happily accepts Send {SC039} as equivalent to a spacebar-press
+SendSpace() {
+	Send {SC039}
+	Return
+}
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;	@ Space..._Loop
+;			Designed for Windows Task Scheduler to quickly show open all tasks on the main
+;			page, which can then be sorted (but only for the ones that've been opened)
+SpaceUp_Loop(LoopIterations) {
+	Loop %LoopIterations% {
+		Sleep 500
+		Send {SC039}
+		SendSpace()
+		Sleep 500
+		Send {Up}
+	}
+	Return
+}
+; SpaceUp_Loop(LoopIterations, WinTitle) {
+; 	SetKeyDelay, 0, -1
+; 	SetControlDelay, -1
+; 	SetTitleMatchMode, 2
+; 	; WinActivate,%WinTitle%
+; 	Loop %LoopIterations% {
+; 		DatStr=Sending {Space} to %WinTitle%
+; 		ToolTip, %DatStr%, 250, %A_Index%, `
+; 		ControlSend,, {Space}, %WinTitle%
+; 		; Send {Space}
+; 		Sleep 100
+; 		DatStr=Sending {Up} to %WinTitle%
+; 		ToolTip, %DatStr%, 500, %A_Index%, 2
+; 		ControlSend,, {Up}, %WinTitle%
+; 		; Send {Up}
+; 		Sleep 100
+; 	}
+; 	Return
+; }
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  @  OpenVSCode - Opens the application "Visual Studio Code"
@@ -1105,14 +1200,14 @@ ActiveWindow_Maximize() {
 get_ahk_id_from_title(WinTitle,ExcludeTitle) {
 	SetTitleMatchMode, 2
 	ControlGet, output_var, Hwnd,,, %WinTitle%,, %ExcludeTitle%
-	return_ahk_id=ahk_id %output_var%
-	return return_ahk_id
+	dat_ahk_id=ahk_id %output_var%
+	Return dat_ahk_id
 }
 get_ahk_id_from_pid(WinPid) {
 	SetTitleMatchMode, 2
 	ControlGet, output_var, Hwnd,,, ahk_pid %WinPid%
-	return_ahk_id=ahk_id %output_var%
-	return return_ahk_id
+	dat_ahk_id=ahk_id %output_var%
+	Return dat_ahk_id
 }
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
