@@ -262,6 +262,7 @@ Foreach ($EachModule In $PowerShellModulesArr) {
 			If ($psm1.verbosity -ne 0) { Write-Host (("Task - Importing Module (caching onto RAM): ") + ($EachModule.Name)); }
 			
 			Import-Module ($StartupModuleFile);
+			# Import-Module ($StartupModuleFile) -Verbose;
 
 			$import_exit_code = If($?){0}Else{1};
 			

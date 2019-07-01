@@ -1,8 +1,6 @@
 #
-#	Example Call:
-#
-#		GitSyncAll -Directory "$HOME/git"
-#
+#	GitSyncAll
+#		Performs batch-actions on every sub-git-directories found within a given directory
 #
 function GitSyncAll {
 	#
@@ -59,7 +57,7 @@ function GitSyncAll {
 		Write-Host (("`nFound ")+($RepoFullpathsArr.Length)+(" ")+($VerbiageRepositoryCount)+(":"));
 		Write-Host "";
 		$RepoFullpathsArr.FullName | Format-List;
-		Write-Host "`n`n";
+		Write-Host "`n";
 
 		ForEach ($EachRepoDir in $RepoFullpathsArr) {
 
@@ -123,36 +121,47 @@ function GitSyncAll {
 
 			}
 		}
-		Write-Host "";
+	
+		Write-Host "`n`n  All Repositories ${Action}ed" -ForegroundColor "Green";
 
 	} Else {
 		Write-Host "No git repositories found in: `"${Directory}`"`n" -ForegroundColor "Magenta";
 	}
 
-	Write-Host "`n`n  All Repositories Synced" -ForegroundColor "Green";
-	
-	Write-Host -NoNewLine "`n`n  Press the 'Escape' key to exit...`n`n" -BackgroundColor "Black" -ForegroundColor "Yellow";
-	$KeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
-	While ($KeyPress.VirtualKeyCode -ne 27) {
-		$KeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
-	}
 
-	# Write-Host -NoNewLine "  Closing in ";
-	# $SecondsTilAutoExit = 30;
-	# While ($SecondsTilAutoExit -gt 0) {
-	# 	Write-Host -NoNewLine ($SecondsTilAutoExit);
-	# 	$MillisecondsRemaining = 1000;
-	# 	While ($MillisecondsRemaining -gt 0) {
-	# 		$WaitMilliseconds = 250;
-	# 		$MillisecondsRemaining -= $WaitMilliseconds;
-	# 		[Threading.Thread]::Sleep($WaitMilliseconds);
-	# 		Write-Host -NoNewLine ".";
-	# 	}
-	# 	$SecondsTilAutoExit--;
+	# ------------------------------------------------------------
+	#	### "Press any key to close this window..."
+	# Write-Host -NoNewLine "`n`n  Press any key to close this window...`n`n" -BackgroundColor "Black" -ForegroundColor "Yellow";
+	# $KeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+	#
+	# ------------------------------------------------------------
+	# ### "Press 'Escape' to close this window..."
+	# Write-Host -NoNewLine "`n`n  Press 'Escape' to close this window...`n`n" -BackgroundColor "Black" -ForegroundColor "Yellow";
+	# $KeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+	# While ($KeyPress.VirtualKeyCode -ne 27) {
+	# 	$KeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
 	# }
-
+	#
+	# ------------------------------------------------------------
+	# ### "Closing in 3...2...1..."
+	Write-Host -NoNewLine "  Closing in ";
+	$WaitSeconds = 3;
+	While ($WaitSeconds -gt 0) {
+		Write-Host -NoNewLine ($WaitSeconds);
+		$MillisecondsRemaining = 1000;
+		While ($MillisecondsRemaining -gt 0) {
+			$WaitMilliseconds = 250;
+			$MillisecondsRemaining -= $WaitMilliseconds;
+			[Threading.Thread]::Sleep($WaitMilliseconds);
+			Write-Host -NoNewLine ".";
+		}
+		$WaitSeconds--;
+	}
+	#
+	# ------------------------------------------------------------
+	#
+	Return;
 }
-
 Export-ModuleMember -Function "GitSyncAll";
 
 #

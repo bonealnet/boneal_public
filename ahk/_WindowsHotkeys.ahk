@@ -23,38 +23,49 @@
 ;  SysGet  :::  https://autohotkey.com/docs/commands/SysGet.htm
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
-; Global Settings
-;
+
+SetBatchLines, -1
+
+SetWorkingDir, %A_ScriptDir%
+
 DetectHiddenWindows, On
-; 
+
 #Persistent
-; 
-#SingleInstance force
-; 
+
+#SingleInstance Force
+
 ; #EscapeChar \  ; Change it to be backslash instead of the default of accent (`).
-;
+
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
+
+; #NoEnv  ; "Specifying the line #NoEnv anywhere in a script prevents empty variables from being looked up as potential environment variables" - AutoHotkey Docs
+
+USERPROFILE=%USERPROFILE%
+
 USER_DESKTOP=%USERPROFILE%\Desktop
-; 
-USER_DOCUMENTS=%USERPROFILE%/Documents
-;
+ 
+USER_DOCUMENTS=%USERPROFILE%\Documents
+
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SetCapsLockState, Off
+
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
 ; Setup a group for targeting [Windows Explorer] windows
+
 GroupAdd, Explorer, ahk_class ExploreWClass ; Unused on Vista and later
+
 GroupAdd, Explorer, ahk_class CabinetWClass
-;
+
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
 ;	Tooltip clearing tool(s)
-;
+
 RemoveToolTip() {
 	ToolTip
 	Return
 }
-;
+
 ClearTooltip(TimerPeriod) {
 	; If SetTimer's Period...
 	;			 |--> is positive, it repeats its command until explicitly cancelled
@@ -62,16 +73,15 @@ ClearTooltip(TimerPeriod) {
 	SetTimer, RemoveToolTip, -%TimerPeriod%
 	Return
 }
-;
+
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
 ;	SplashText clearing tool(s)
-;
+
 RemoveSplashText() {
 	SplashTextOff
 	Return
 }
-;
+
 ClearSplashText(TimerPeriod) {
 	; If SetTimer's Period...
 	;			 |--> is positive, it repeats its command until explicitly cancelled
@@ -94,9 +104,11 @@ ClearSplashText(TimerPeriod) {
 
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;   HOTKEY:  Win + Z
-;		ACTION:  Show active window's location & dimension specs in a popup message-box
+;		ACTION:  Grabs information about current (active) window's exe-filepath, process-id, on-screen location, & more, and displays it in a popup table Gui
 ;
 #Z::
+
+	Gui, WindowSpecs:Default
 
 	WinGetActiveStats, Title, Width, Height, Left, Top
 	WinGetTitle, WinTitle, A
@@ -109,9 +121,6 @@ ClearSplashText(TimerPeriod) {
 	WinGet, ControlNames, ControlList, A	; Get all control names in this window
 	
 	; Create the ListView with two columns
-	
-	; Gui, MyGui:Add, Text,, Text for about-box.
-
 
 	; Note that [ Gui, {configs...} ] declarations must come DIRECTLY (as-in the PREVIOUS LINE) BEFORE [ Gui, Add, ... ]
 	Gui, Font, s10, Tahoma
@@ -124,7 +133,7 @@ ClearSplashText(TimerPeriod) {
 	GUI_ROWCOUNT := 12
 	GUI_WIDTH := 1000
 
-	Gui, Add, ListView, r%GUI_ROWCOUNT% w%GUI_WIDTH% gOnDoubleClick_DestroyGui, Key|Val
+	Gui, Add, ListView, r%GUI_ROWCOUNT% w%GUI_WIDTH% gOnDoubleClick_GuiDestroy_WindowSpecs, Key|Val
 
 	LV_Add("", "Title", WinTitle)
 	LV_Add("", "Class", WinClass)
@@ -144,16 +153,15 @@ ClearSplashText(TimerPeriod) {
 	; Display the window and return. The script will be notified whenever the user double clicks a row.
 	Gui, Show
 	Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
-;	@	OnDoubleClick_DestroyGui  -->  Built as a 'g....' callback for Gui-window doubleclick
-;
-OnDoubleClick_DestroyGui() {
-if (A_GuiEvent = "DoubleClick") {
-	Gui, Destroy
+
+OnDoubleClick_GuiDestroy_WindowSpecs() {
+	if (A_GuiEvent = "DoubleClick") {
+		Gui, WindowSpecs:Default
+		Gui, Destroy
+	}
+	Return
 }
-}
+
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;   HOTKEY:  Win + -
 ;		ACTION:  Type a line of -----'s
@@ -238,10 +246,13 @@ StringRepeat(StrToRepeat, Multiplier) {
 }
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Win + D
+;  ACTION:  Types a variety of timestamp strings
 ;
 ; Timestamp		:::		Win + Shift + D
 ; Timestamp		:::		Win + Ctrl + D
 ; Timestamp		:::		Win + Alt + D
+;
 #D::
 ^#D::
 !#D::
@@ -289,9 +300,19 @@ StringRepeat(StrToRepeat, Multiplier) {
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  ?????
+;  ACTION:  On-the-fly Timezone w/ format: [  -0500  ]
 ;
-;  ACTION:  type the clipboard (workaround for paste blocking web-scripts)
+; ?????::
+; 	TZ_OFFSET := GetTimezoneOffset()
+;   Send %TZ_OFFSET%
+; 	Return
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  Win + P
+;  ACTION:  type the clipboard (workaround for paste blocking web-scripts)
+;
+#P::
 +#P::
 	SetKeyDelay, 0, -1
 	MsgBox, 4,, Type the Clipboard? (Yes/No)
@@ -303,9 +324,9 @@ StringRepeat(StrToRepeat, Multiplier) {
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
-;  ACTION:  type the COMPUTERNAME
 ;  HOTKEY:  Win + H
+;  ACTION:  type the COMPUTERNAME
+;
 #H::
 	SetKeyDelay, 0, -1
 	RET_VAL = %COMPUTERNAME%
@@ -313,9 +334,9 @@ StringRepeat(StrToRepeat, Multiplier) {
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
-;  ACTION:  type the DOMAIN-USERNAME
 ;  HOTKEY:  Win + U
+;  ACTION:  type the DOMAIN-USERNAME
+;
 #U::
 	SetKeyDelay, 0, -1
 	; RET_VAL = %USERNAME%
@@ -324,12 +345,23 @@ StringRepeat(StrToRepeat, Multiplier) {
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;
-;  ACTION:  On-the-fly Timezone w/ format: [  -0500  ]
 ;  HOTKEY:  Win + G
+;  ACTION:  Types the contents of target file
+;
 #G::
-	TZ_OFFSET := GetTimezoneOffset()
-  Send %TZ_OFFSET%
+	FilePathToRead=%USERPROFILE%\.gnupg\passphrase.personal
+	FileRead, FilePathContents, %FilePathToRead%
+	SendInput, %FilePathContents%
+	Return
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Win + W
+;  ACTION:  Types the contents of target file
+;
+#W::
+	FilePathToRead=%USERPROFILE%\.gnupg\passphrase.work
+	FileRead, FilePathContents, %FilePathToRead%
+	SendInput, %FilePathContents%
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -341,10 +373,10 @@ StringRepeat(StrToRepeat, Multiplier) {
 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Shift + Win + F2
+;  ACTION:  Win10 Download & Delete Recordings via XBox Win10 App  !!! MAKE SURE TO HIDE SCREENSHOTS BEFOREHAND !!!
 ;
-#F2::   ; Win + F2
-	; Win10 Download & Delete Recordings via XBox Win10 App
-	;  (MAKE SURE TO HIDE SCREENSHOTS BEFOREHAND)
++#F2::
 	Loop {
 		MouseClick, Left, 861, 947
 		Sleep 10000
@@ -371,9 +403,12 @@ StringRepeat(StrToRepeat, Multiplier) {
 	}
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Win + F2
+;  ACTION:  Show all (current) Window Titles
 ;
-+#F2::   ; +#F2 / [ Shift + Win + F2 ] -- Show all (current) Window Titles
-	Gui, Add, ListView, r50 w1000 gOnDoubleClick_DestroyGui, WindowTitle
+#F2::
+	Gui, WinTitles:Default
+	Gui, Add, ListView, r50 w1000 gOnDoubleClick_GuiDestroy_WinTitles, WindowTitle
 	WinGet, Window, List
 	Loop %Window% {
 		Id:=Window%A_Index%
@@ -388,7 +423,16 @@ StringRepeat(StrToRepeat, Multiplier) {
 	Gui, Show
 	; MsgBox %tList%
 	Return
-;
+
+
+OnDoubleClick_GuiDestroy_WinTitles() {
+	if (A_GuiEvent = "DoubleClick") {
+		Gui, WinTitles:Default
+		Gui, Destroy
+	}
+	Return
+}
+
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  Fn Key (X1 Carbon)
 ;  ACTION:  Set Fn to perform CTRL action, instead
@@ -527,11 +571,20 @@ StringRepeat(StrToRepeat, Multiplier) {
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + N
 ;  ACTION:  Opens "View Network Connections" (in the Control Panel)
-;
+; 
 #N::
-	Run "c:\windows\system32\ncpa.cpl"
+	Run ::{7007acc7-3202-11d1-aad2-00805fc1270e}
 	Return
-;
+; 
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Windows-Key + E
+;  ACTION:  Opens "USERPROFILE" directory
+; 
+#E::
+	SplitPath, A_MyDocuments, , UserProfileDirname
+	Run %UserProfileDirname%
+	Return
+; 
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + O
 ;  ACTION:  Opens "Programs & Features" in the Control Panel
@@ -555,30 +608,6 @@ StringRepeat(StrToRepeat, Multiplier) {
 !`::
 	MouseClick, Right
 	Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Caps Lock
-;  ACTION:  Disable the "Caps Lock" Key from normal-use
-;
-CapsLock::
-	SetCapsLockState, Off
-	Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Caps Lock + w
-;  ACTION:  Scroll up 10 wheel clicks
-;
-; CapsLock & w::
-; 	MouseClick,WheelUp,,,10,0,D,R
-; 	Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Caps Lock + s
-;  ACTION:  Scroll down 10 wheel clicks
-;
-; CapsLock & s::
-; 	MouseClick,WheelDown,,,10,0,D,R
-; 	Return
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  HOTKEY:  Win + Mouse-Wheel Up/Down
@@ -1209,6 +1238,175 @@ get_ahk_id_from_pid(WinPid) {
 	dat_ahk_id=ahk_id %output_var%
 	Return dat_ahk_id
 }
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;  HOTKEY:  Caps Lock
+;  ACTION:  Permanently disable CapsLock (unless Shift+CapsLock is pressed, then toggle CapsLock like normal)
+;
+CapsLock::
+^CapsLock::
+!CapsLock::
+#CapsLock::
+	SetCapsLockState, Off
+	Return
++CapsLock::
+	SetCapsLockState, % GetKeyState("CapsLock", "T") ? "Off" : "On"
+	Return
+;
+;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+;
+
+; Gosub, NumCapsScrollLock_CreateOSD
+; Return
+
+; NumCapsScrollLock_CreateOSD:
+; {
+; 	Gui, NumCapsScrollLock:Default
+; 	Gui, -caption +toolwindow +alwaysontop +lastfound
+; 	Gui, color, 8b0fc6
+; 	Gui, font, s10 w600, Arial Bold
+; 	Gui, margin, 0, 0
+; 	WinSet, transcolor, 8b0fc6
+	
+; 	n_color := GetKeyState("NumLock", "t") ? "98cb4a" : "5481E6"
+; 	c_color := GetKeyState("CapsLock", "t") ? "98cb4a" : "5481E6"
+; 	s_color := GetKeyState("ScrollLock", "t") ? "98cb4a" : "5481E6"
+
+; 	Gui, add, listview, x0 y0 w60 h16 -hdr -e0x200 -multi background%n_color% v_numlock gNumCapsScrollLock_lv altsubmit
+; 	Gui, add, text, x0 y0 w60 h16 0x201 cffffff backgroundtrans vtxt_numlock, N
+
+; 	Gui, add, listview, x63 y0 w60 h16 -hdr -e0x200 -multi background%c_color% v_capslock gNumCapsScrollLock_lv altsubmit
+; 	Gui, add, text, x63 y0 w60 h16 0x201 cffffff backgroundtrans vtxt_capslock, C
+
+; 	Gui, add, listview, x126 y0 w60 h16 -hdr -e0x200 -multi background%s_color% v_scrolllock gNumCapsScrollLock_lv altsubmit
+; 	Gui, add, text, x126 y0 w60 h16 0x201 cffffff backgroundtrans vtxt_scrolllock, S
+; }
+; Return
+
+; NumLock::
+; CapsLock::
+; ScrollLock::
+; {
+; 	; Gui, NumCapsScrollLock:Default
+; 	if (!locked_%a_thishotkey%)
+; 	{
+; 		NumCapsScrollLock_ToggleKey(a_thishotkey)
+; 		; soundplay, beep.wav
+; 		color := GetKeyState(a_thishotkey, "t") ? "98cb4a" : "5481E6"
+; 		GuiControl, +background%color%, _%a_thishotkey%
+; 		GuiControl, Hide, txt_%a_thishotkey%
+; 		GuiControl, Show, txt_%a_thishotkey%
+; 	}
+; 	sysget, var_, monitorworkarea
+; 	x := (var_right-190)
+; 	y := (var_bottom-26)
+; 	Gui, Show, x%x% y%y% na, OSD
+; 	settimer, NumCapsScrollLock_Cancel, -3000
+; 	keywait, % a_thishotkey
+; }
+; Return
+
+; NumCapsScrollLock_lv:
+; {
+; 	; Gui, NumCapsScrollLock:Default
+; 	if (A_GuiEvent = "normal") or (A_GuiEvent = "doubleclick")
+; 	{
+; 		control := ltrim(a_guicontrol, "_")
+; 		if (!locked_%control%)
+; 			{
+; 				NumCapsScrollLock_ToggleKey(control)
+; 				; soundplay, beep.wav
+; 				color := GetKeyState(control, "t") ? "98cb4a" : "5481E6"
+; 				GuiControl, +background%color%, %a_guicontrol%
+; 				GuiControl, Hide, txt%a_guicontrol%
+; 				GuiControl, Show, txt%a_guicontrol%
+; 			}
+; 		settimer, NumCapsScrollLock_Cancel, -3000
+; 	}
+; 	else if (A_GuiEvent = "rightclick")
+; 	{
+; 		NumCapsScrollLock_LockUnlock(ltrim(a_guicontrol, "_"))
+; 		; soundplay, click.wav
+; 		settimer, NumCapsScrollLock_Cancel, -3000
+; 	}
+; }
+; Return
+
+; NumCapsScrollLock_ToggleKey(key)
+; {
+; 	if (key = "CapsLock")
+; 	{
+; 		; SetCapsLockState, % GetKeyState(key, "t") ? "off" : "on"
+; 		SetCapsLockState, Off
+; 	}
+; 	else if (key = "ScrollLock")
+; 	{
+; 		SetScrollLockState, % GetKeyState(key, "t") ? "off" : "on"
+; 	}
+; 	else if (key = "NumLock")
+; 	{
+; 		SetNumLockState, % GetKeyState(key, "t") ? "off" : "on"
+; 	}
+; 	Return
+; }
+
+; NumCapsScrollLock_LockUnlock(key)
+; {
+; 	Global locked_numlock, locked_capslock, locked_scrolllock
+; 	if (key = "NumLock")
+; 	{
+; 		if (locked_numlock)
+; 			{
+; 				SetNumLockState
+; 				locked_numlock := 0
+; 			}
+; 		else
+; 			{
+; 				SetNumLockState, % GetKeyState(key, "t") ? "AlwaysOn" : "AlwaysOff"
+; 				locked_numlock := 1
+; 			}
+; 	}
+; 	else if (key = "CapsLock")
+; 	{
+; 		if (locked_capslock)
+; 			{
+; 				SetCapsLockState
+; 				locked_capslock := 0
+; 			}
+; 		else
+; 			{
+; 				SetCapsLockState, % GetKeyState(key, "t") ? "AlwaysOn" : "AlwaysOff"
+; 				locked_capslock := 1
+; 			}
+; 	}
+; 	else if (key = "ScrollLock")
+; 	{
+; 		if (locked_scrolllock)
+; 			{
+; 				SetScrollLockState
+; 				locked_scrolllock := 0
+; 			}
+; 		else
+; 			{
+; 				SetScrollLockState, % GetKeyState(key, "t") ? "alwayson" : "AlwaysOff"
+; 				locked_scrolllock := 1
+; 			}
+; 	}
+; 	Return
+; }
+
+; NumCapsScrollLock_Cancel:
+; {
+; 	; Gui, NumCapsScrollLock:Default
+; 	Gui, Cancel
+; }
+; Return
+
+; ;	Citation(s)
+; ;
+; ; NumCapsScrollLock  :::  Thanks to user [ dmg ] on AutoHotkey forum [ https://autohotkey.com/boards/viewtopic.php?p=22579#p22579 ]
+; ;
+
 ;
 ;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
