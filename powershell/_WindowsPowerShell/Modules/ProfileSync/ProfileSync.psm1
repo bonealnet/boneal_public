@@ -37,7 +37,7 @@ function ProfileSync {
 		$i_FullPath += (($Profile_SplitChar)+($Profile_ParentDirs[$i]));
 		If ((Test-Path -PathType Container -Path (($i_FullPath)+($Profile_SplitChar))) -eq $false) {
 			# Directory doesn't exist - create it
-			If ($psm1.verbosity -ne 0) { Write-Host (("Task - Create parent-directory for Profile: ")+($i_FullPath)); }
+			If ($psm1.verbosity -ne 0) { Write-Host (("ProfileSync - Create parent-directory for Profile: ")+($i_FullPath)); }
 			New-Item -ItemType "Directory" -Path (($i_FullPath)+($Profile_SplitChar)) | Out-Null;
 		} Else {
 			# Directory exists - skip it
@@ -68,13 +68,16 @@ function ProfileSync {
 	
 	$Pro = @();
 
-	$Pro += 'Write-Host "Loading personal and system profiles...`n";';
-
 	$Pro += 'New-Alias grep Select-String;';
 
 	$Pro += 'New-Alias which Get-Command;';
 
-	$Pro += (('$GithubOwner="')+(${GithubOwner})+('"; $GithubRepo="')+(${GithubRepo})+('";')+(' Write-Host "Task - Sync local git repository to origin `"https://github.com/${GithubOwner}/${GithubRepo}.git`"..." -ForegroundColor Green; If (Test-Path "${HOME}/${GithubRepo}") { Set-Location "${HOME}/${GithubRepo}"; git reset --hard "origin/master"; git pull; } Else { Set-Location "${HOME}"; git clone "https://github.com/${GithubOwner}/${GithubRepo}.git"; } . "${HOME}/${GithubRepo}/powershell/_WindowsPowerShell/Modules/ImportModules.ps1"; Write-Host "`nPass - PowerShell Modules Synchronized`n" -ForegroundColor Cyan;'));
+	$Pro += (('Write-Host "')+($($MyInvocation.MyCommand.Name))+(' - Info: Detected PowerShell v$(($($PSVersionTable.PSVersion.Major))+($($PSVersionTable.PSVersion.Minor)/10))`n" -ForegroundColor Gray;'));
+	
+	$Pro += (('Write-Host "')+($($MyInvocation.MyCommand.Name))+(' - Task: Loading personal and system profiles...`n" -ForegroundColor Gray;'));
+
+	$Pro += (('$GithubOwner="')+(${GithubOwner})+('"; $GithubRepo="')+(${GithubRepo})+('";')+(' Write-Host "ProfileSync - Task: Sync local git repository to origin `"https://github.com/${GithubOwner}/${GithubRepo}.git`"..." -ForegroundColor Gray; If (Test-Path "${HOME}/${GithubRepo}") { Set-Location "${HOME}/${GithubRepo}"; git reset --hard "origin/master"; git pull; } Else { Set-Location "${HOME}"; git clone "https://github.com/${GithubOwner}/${GithubRepo}.git"; } . "${HOME}/${GithubRepo}/powershell/_WindowsPowerShell/Modules/ImportModules.ps1"; Write-Host "`nProfileSync - Pass: PowerShell Modules Synchronized`n" -ForegroundColor Green;'));
+	
 	$Pro += 'Set-Location "${HOME}";';
 
 	### Overwrite $Profile content

@@ -33,37 +33,16 @@ Function TaskSnipe {
 
 	)
 
-	$Dashes = "`n`n------------------------------------------------------------`n";
-
-	Write-Host "${Dashes}MyInvocation.MyCommand:";
-	Write-Output -NoEnumerate $MyInvocation.MyCommand | Get-Member;
-
-	Write-Host "${Dashes}args:";
-	Write-Output -NoEnumerate $args | Get-Member;
-
-	Write-Host "${Dashes}PSBoundParameters.Values:";
-	Write-Output -NoEnumerate $PSBoundParameters.Values | Get-Member;
-	
-	Return;
-
 	If ((RunningAsAdministrator) -eq ($False)) {
-
-		# $VarsObj = @{};
-		# $VarsObj["MyInvocation"] = ($MyInvocation); # MyInvocation.MyCommand
-		# $VarsObj["PSScriptRoot"] = ($PSScriptRoot);
-		# $VarsObj["PsBoundParameters"] = ($PsBoundParameters); # PsBoundParameters.Values
-		# $VarsObj["args"] = ($args);
 		
 		$CommandString = $MyInvocation.MyCommand.Name;
+		$PSBoundParameters.Keys | ForEach-Object {
+			$CommandString += " -$_";
+			If (@('String','Integer','Double').Contains($($PSBoundParameters[$_]).GetType().Name)) {
+				$CommandString += " `"$($PSBoundParameters[$_])`"";
+			}
+		}
 
-		If ($ESET -eq $True) {                           $CommandString = "$CommandString -ESET"; }
-		If ($MalwarebytesAntiMalware -eq $True) {        $CommandString = "$CommandString -MalwarebytesAntiMalware"; }
-		If ($MalwarebytesAntiRansomware -eq $True) {     $CommandString = "$CommandString -MalwarebytesAntiRansomware"; }
-		If ($MalwarebytesAntiExploit -eq $True) {        $CommandString = "$CommandString -MalwarebytesAntiExploit"; }
-		If ($WindowsDefender -eq $True) {                $CommandString = "$CommandString -WindowsDefender"; }
-		If ($PSBoundParameters.ContainsKey('Quiet')) {   $CommandString = "$CommandString -Quiet"; }
-		If ($PSBoundParameters.ContainsKey('Verbose')) { $CommandString = "$CommandString -Verbose"; }
-				
 		PrivilegeEscalation -Command ("${CommandString}");
 		
 	} Else {
@@ -128,14 +107,14 @@ Function TaskSnipe {
 							$NewSnipe.ServiceNames = @();
 							# Get Service Info
 							If (($NewSnipe.SESSIONNAME) -Eq ("Services")) {
-								$ServiceList = (Get-WmiObject Win32_Service -Filter "ProcessId='$($NewSnipe.PID)'" -ErrorAction "SilentlyContinue");
-								If ($ServiceList -ne $Null) {
-									$ServiceList | Where-Object { $_.State -eq "Running" } | ForEach-Object {
-										$NewSnipe.ServiceNames += $_.Name; 
-										# $_.StartMode; 
-										# $_.State; 
-										# $_.Status; 
-									}
+								# $ServiceList = (Get-WmiObject Win32_Service -Filter "ProcessId='$($NewSnipe.PID)'" -ErrorAction "SilentlyContinue");
+								# If ($ServiceList -ne $Null) {
+								# 	$ServiceList | Where-Object { $_.State -eq "Running" } | ForEach-Object {
+								# 		$NewSnipe.ServiceNames += $_.Name;
+								# 	}
+								# }
+								Get-WmiObject Win32_Service -Filter "ProcessId='$($NewSnipe.PID)' AND State='Running'" -ErrorAction "SilentlyContinue" | ForEach-Object {
+									$NewSnipe.ServiceNames += $_.Name;
 								}
 							}
 							# Push the new object of values onto the final results array
@@ -155,7 +134,7 @@ Function TaskSnipe {
 			#
 			# At least one matching process was found
 			#
-			Write-Host (("`n`nFound ")+($SnipeList.Count)+(" PID(s) matching search criteria:`n")) -ForegroundColor "Green";
+			Write-Host (("`n`n$($MyInvocation.MyCommand.Name) - Info: Found ")+($SnipeList.Count)+(" PID(s) matching search criteria:`n")) -ForegroundColor "Green";
 			$SnipeList | ForEach-Object {
 				$EachIMAGENAME = $_.IMAGENAME;
 				$EachPID = $_.PID;
@@ -168,68 +147,57 @@ Function TaskSnipe {
 			# Make the user confirm before killing tasks (default, or call with or -Yes -SkipConfirmation to kill straight-away)
 			#
 
-			If ($SkipConfirm -Eq $True) {
-				#
-				# First Confirmation - Skip
-				#
-				If ($PSBoundParameters.ContainsKey('Quiet') -eq $false) { 
-					Write-Host -NoNewLine ("Skipping first confirmation") -BackgroundColor "Black" -ForegroundColor "Yellow";
-				}
-				$FirstConfirm = $True;
-			} Else {
+			If ($SkipConfirm -Eq $False) {
 				#
 				# First Confirmation - Confirm via "Are you sure ... ?" (Default)
 				#
 				$ConfirmKeyList = "abcdefghijklmopqrstuvwxyz"; # removed 'n'
 				$FirstConfKey = (Get-Random -InputObject ([char[]]$ConfirmKeyList));
 				Write-Host -NoNewLine ("`n");
-				Write-Host -NoNewLine ("Are you sure you want to kill these PID(s)?") -BackgroundColor "Black" -ForegroundColor "Yellow";
+				Write-Host -NoNewLine ("$($MyInvocation.MyCommand.Name) - Confirm: Are you sure you want to kill these PID(s)?") -BackgroundColor "Black" -ForegroundColor "Yellow";
 				Write-Host -NoNewLine ("`n`n");
-				Write-Host -NoNewLine ("  Press the `"") -ForegroundColor "Yellow";
+				Write-Host -NoNewLine ("$($MyInvocation.MyCommand.Name) - Confirm: Press the `"") -ForegroundColor "Yellow";
 				Write-Host -NoNewLine ($FirstConfKey) -ForegroundColor "Green";
 				Write-Host -NoNewLine ("`" key to if you are sure:  ") -ForegroundColor "Yellow";
 				$UserKeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown'); Write-Host (($UserKeyPress.Character)+("`n"));
 				$FirstConfirm = (($UserKeyPress.Character) -eq ($FirstConfKey));
 			}
 			#
-			# Check First Confirm
+			# Check (or Skip) First Confirmation flag
 			#
-			If ($FirstConfirm -Eq $True) {
-				If ($SkipConfirm -Eq $True) {
-					#
-					# Second Confirmation - Skip
-					#
-					$SecondConfirm = $True;
-				} Else {
+			If (($FirstConfirm -Eq $True) -Or ($SkipConfirm -Eq $True)) {
+				If ($SkipConfirm -Eq $False) {
 					#
 					# Second Confirmation - Confirm via "Are you sure ... ?" (Default)
 					#
 					$SecondConfKey = (Get-Random -InputObject ([char[]]$ConfirmKeyList.Replace([string]$FirstConfKey,"")));
-					Write-Host -NoNewLine ("Really really sure?") -BackgroundColor "Black" -ForegroundColor "Yellow";
+					Write-Host -NoNewLine ("$($MyInvocation.MyCommand.Name) - Confirm: Really really sure?") -BackgroundColor "Black" -ForegroundColor "Yellow";
 					Write-Host -NoNewLine ("`n`n");
-					Write-Host -NoNewLine ("  Press the `"") -ForegroundColor "Yellow";
+					Write-Host -NoNewLine ("$($MyInvocation.MyCommand.Name) - Confirm: Press the `"") -ForegroundColor "Yellow";
 					Write-Host -NoNewLine ($SecondConfKey) -ForegroundColor "Green";
 					Write-Host -NoNewLine ("`" key to confirm and kill:  ") -ForegroundColor "Yellow";
 					$UserKeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
 					$SecondConfirm = (($UserKeyPress.Character) -eq ($SecondConfKey));
 				}
 				#
-				# Check Second Confirm
+				# Check (or Skip) Second Confirmation flag
 				#
-				If ($SecondConfirm -Eq $True) {
-					#
-					# !!! CONFIRMED !!!
-					#
-					Write-Host "`n`n  Confirmed.`n";
+				If (($SecondConfirm -Eq $True) -Or ($SkipConfirm -Eq $True)) {
+					If ($SkipConfirm -Eq $False) {
+						#
+						# MANUALLY CONFIRMED
+						#
+						Write-Host "`n`n$($MyInvocation.MyCommand.Name) - Info: Confirmed.`n";
+					}
 					$SnipeList | ForEach-Object {
 						If (($_.SESSIONNAME) -Eq "Services") {
 							$_.ServiceNames | ForEach-Object {
-								Get-Service -Name ($_)  -ErrorAction "SilentlyContinue" | Where-Object { $_.Status -eq "Running"} | ForEach-Object {
+								Get-Service -Name ($_) -ErrorAction "SilentlyContinue" | Where-Object { $_.Status -eq "Running"} | ForEach-Object {
 									#
 									# STOP SERVICES BY NAME
 									#
-									Write-Host "`n  Stopping Service `"$($_.Name)`" ...  " -ForegroundColor "Red" -BackgroundColor "Black";
-									Stop-Service -Name ($_.Name) -Force -NoWait;
+									Write-Host "`n$($MyInvocation.MyCommand.Name) - Task: Stopping Service `"$($_.Name)`" ...  " -ForegroundColor "Gray";
+									Stop-Service -Name ($_.Name) -Force -NoWait -ErrorAction "SilentlyContinue";
 								}
 							}
 						} Else {
@@ -237,8 +205,8 @@ Function TaskSnipe {
 								#
 								# KILL TASKS BY PID
 								#
-								Write-Host "`n  Stopping Process `"$($_.IMAGENAME)`" (PID $($_.PID)) ...  " -ForegroundColor "Red" -BackgroundColor "Black";
-								Stop-Process -Id ($_.PID) -Force; $last_exit_code = If($?){0}Else{1};
+								Write-Host "`n$($MyInvocation.MyCommand.Name) - Task: Stopping Process `"$($_.IMAGENAME)`" (PID $($_.PID)) ...  " -ForegroundColor "Gray";
+								Stop-Process -Id ($_.PID) -Force -ErrorAction "SilentlyContinue"; $last_exit_code = If($?){0}Else{1};
 								If ($last_exit_code -ne 0) {
 									### FALLBACK OPTION:
 									$FI_PID  = " /FI `"PID eq $($_.PID)`"";
@@ -251,33 +219,43 @@ Function TaskSnipe {
 					#
 					# User bailed-out of the confirmation, cancelling the kill PID(s) action
 					#
-					Write-Host "Bail-Out @ Second confirmation - No Action(s) performed" -ForegroundColor "Red" -BackgroundColor "Black";
+					Write-Host "`n`n$($MyInvocation.MyCommand.Name) - Info: User bailed out @ Second confirmation - No Action(s) performed  `n`n" -ForegroundColor "Gray";
 				}
 			} Else {
 				#
 				# User bailed-out of the FIRST confirmation, cancelling the kill PID(s) action
 				#
-				Write-Host "Bail-Out @ First confirmation - No Action(s) performed" -ForegroundColor "Red" -BackgroundColor "Black";
+				Write-Host "`n`n$($MyInvocation.MyCommand.Name) - Info: User bailed out @ First confirmation - No Action(s) performed  `n`n" -ForegroundColor "Gray";
 			}
 		} Else {
 			#
 			# No results found
 			#
+			Write-Host "`n`n$($MyInvocation.MyCommand.Name) - Info: No processes/services found - No Action(s) performed  `n`n" -ForegroundColor "Gray";
+
 		}
 
-		Write-Host "`n`n";
-		
+		If ($SkipConfirm -Eq $False) {
+			# ------------------------------------------------------------
+			#	### "Press any key to continue..."
+			Write-Host -NoNewLine "`n`n$($MyInvocation.MyCommand.Name) - Press any key to continue...  `n`n" -ForegroundColor "Yellow" -BackgroundColor "Black";
+			$KeyPress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
+		}
+
 	}
+
 	Return;
+
 }
 Export-ModuleMember -Function "TaskSnipe";
 # Install-Module -Name "TaskSnipe"
 
 
 
+# ------------------------------------------------------------
 #
 #	Citation(s)
 #
-#		docs.microsoft.com | https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service
+#		docs.microsoft.com | "Stop-Service - Microsoft Docs" | https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service
 #
 #

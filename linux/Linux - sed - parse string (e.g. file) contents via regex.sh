@@ -17,10 +17,40 @@ fi;
 
 # ------------------------------------------------------------
 # 
+# Add line before & after line via sed, and change the line as-well
+#
+#!/bin/sh
+sed '
+/WORD/ {
+i\
+Add this line before
+a\
+Add this line after
+c\
+Change the line to this one
+}';
+
+
+
+# ------------------------------------------------------------
+# 
 # Parse GnuPG key_id's out of gpg's 'LONG' formated-values
 #
 GnuPG_KeyIDs=$(gpg --list-secret-keys --keyid-format 'LONG' | sed --regexp-extended --quiet --expression='s/^sec\ +([A-Za-z0-9]+)\/([A-F0-9]{16})\ +([0-9\-]{1,10})\ +(.+)$/\2/p');
 echo "GnuPG_KeyIDs=\"${GnuPG_KeyIDs}\"";
+
+
+
+# ------------------------------------------------------------
+# 
+# Remove excessive whitespace from file
+#
+
+sed_remove_whitespace_lines='/^\s*$/d';
+sed --in-place --expression="${sed_remove_whitespace_lines}" "FILEPATH";
+
+sed_remove_starting_whitespace='s/^\s*//g';
+sed --in-place --expression="${sed_remove_starting_whitespace}" "FILEPATH";
 
 
 
@@ -61,7 +91,7 @@ fi;
 # MySQL Exports - Replace Function definers with 'CURRENT_USER()'
 # 	|--> Note: Pipes '|' do not require slashes '/' or '\' to be escaped
 
-sed -i 's|DEFINER=[^ ]* FUNCTION|DEFINER=CURRENT_USER() FUNCTION|g' "~/mysql_functions.sql"
+sed -i 's|DEFINER=[^ ]* FUNCTION|DEFINER=CURRENT_USER() FUNCTION|g' "Functions.sql"
 
 
 
@@ -71,7 +101,7 @@ sed -i 's|DEFINER=[^ ]* FUNCTION|DEFINER=CURRENT_USER() FUNCTION|g' "~/mysql_fun
 # 	|--> Note: Pipes '|' do not require slashes '/' or '\' to be escaped
 #
 
-sed -i 's|DEFINER=[^ ]*\*/ |DEFINER=CURRENT_USER()*/ |g' "~/mysql_triggers.sql"
+sed -i 's|DEFINER=[^ ]*\*/ |DEFINER=CURRENT_USER()*/ |g' "Triggers.sql"
 
 
 
@@ -89,6 +119,8 @@ echo $(cat "/etc/nginx/conf.d/nginx_ssl.conf" | grep 'ssl_ciphers ') | sed -e "s
 #
 # Citation(s)
 #
-# 	Thanks to StackExchange user [ Janito Vaqueiro Ferreira Filho ] on forum [ https://stackoverflow.com/questions/12918292 ]
+# 	stackoverflow.com  |  "Grep Access Multiple lines, find all words between two patterns"  |  https://stackoverflow.com/questions/12918292
+#
+# 	stackoverflow.com  |  "Sed - An Introduction and Tutorial by Bruce Barnett"  |  https://www.grymoire.com/Unix/Sed.html#uh-42
 #
 # ------------------------------------------------------------

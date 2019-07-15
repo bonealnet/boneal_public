@@ -87,6 +87,16 @@ find "/var/log" -type 'f' | sed -e 's/.*\.//' | sed -e 's/.*\///' | sort | uniq 
 
 
 ***
+### Find files w/ group ownership equal to GID "1000", then update their group ownership to GID "500"
+```
+
+find "/" -gid "1000" -exec chgrp --changes "500" '{}' \;
+
+```
+
+
+
+***
 ### Find files modified in the last X_MINUTES
 ```
 
