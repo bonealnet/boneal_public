@@ -324,7 +324,7 @@ function ExclusionsListUpdate {
 		# -- PROCESSES -- UserProfile
 		$ExcludedProcesses += @{ Dirname=${UserProfile}; AddDir="Documents\MobaXterm"; Depth=""; Parent=""; Basename="Motty.exe"; };
 		# -- PROCESSES -- NVidia Driver-related
-		$NVDriverPath = (Get-ChildItem -Path ("C:\Windows\System32\DriverStore\FileRepository") -Filter ("NVTelemetryContainer.exe") -File -Recurse -Force -ErrorAction "SilentlyContinue" | Foreach-Object { $_.Directory.Parent.FullName; });
+		$NVDriverPath = (Get-ChildItem -Path ("C:\Windows\System32\DriverStore\FileRepository") -Filter ("NVTelemetryContainer.exe") -File -Recurse -Force -ErrorAction "SilentlyContinue" | ForEach-Object { $_.Directory.Parent.FullName; });
 		If ($NVDriverPath -Ne $Null) {
 			$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir="DRIVERS\NVIDIA Corporation\Drs"; Depth="1"; Parent=""; Basename="dbInstaller.exe"; };
 			$ExcludedProcesses += @{ Dirname=${Sys32}; AddDir=""; Depth="1"; Parent=""; Basename="MCU.exe"; };
@@ -384,18 +384,18 @@ function ExclusionsListUpdate {
 					If ($Each_Parent -eq "") {
 						If ($Each_Depth -eq "") {
 							# Matching on [ top level directory ] & [ basename ]
-							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -File -Recurse -Force -ErrorAction "SilentlyContinue" | Foreach-Object { $_.FullName; });
+							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -File -Recurse -Force -ErrorAction "SilentlyContinue" | ForEach-Object { $_.FullName; });
 						} Else {
 							# Matching on [ top level directory ], [ basename ] & [ depth ]
-							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -Depth ($Each_Depth) -File -Recurse -Force -ErrorAction "SilentlyContinue" | Foreach-Object { $_.FullName; });
+							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -Depth ($Each_Depth) -File -Recurse -Force -ErrorAction "SilentlyContinue" | ForEach-Object { $_.FullName; });
 						}
 					} Else {
 						If ($Each_Depth -eq "") {
 							# Matching on [ top level directory ], [ basename ] & [ parent directory name ]
-							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -File -Recurse -Force -ErrorAction "SilentlyContinue" | Where-Object { $_.Directory.Name -Eq "$Each_Parent" } | Foreach-Object { $_.FullName; });
+							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -File -Recurse -Force -ErrorAction "SilentlyContinue" | Where-Object { $_.Directory.Name -Eq "$Each_Parent" } | ForEach-Object { $_.FullName; });
 						} Else {
 							# Matching on [ top level directory ], [ basename ], [ parent directory name ] & [ depth ]
-							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -Depth ($Each_Depth) -File -Recurse -Force -ErrorAction "SilentlyContinue" | Where-Object { $_.Directory.Name -Eq "$Each_Parent" } | Foreach-Object { $_.FullName; });
+							$FoundProcesses += (Get-ChildItem -Path ("$Each_Dirname") -Filter ("$Each_Basename") -Depth ($Each_Depth) -File -Recurse -Force -ErrorAction "SilentlyContinue" | Where-Object { $_.Directory.Name -Eq "$Each_Parent" } | ForEach-Object { $_.FullName; });
 						}
 					}
 				}
@@ -434,7 +434,7 @@ function ExclusionsListUpdate {
 			$MBAR_SearchDirname = ((${ProgFilesX64})+("\Malwarebytes"));
 			$MBAR_FindBasename = "malwarebytes_assistant.exe";
 
-			$MalwarebytesAssistant = (Get-ChildItem -Path ("${MBAR_SearchDirname}") -Filter ("${MBAR_FindBasename}") -File -Recurse -Force -ErrorAction "SilentlyContinue" | Foreach-Object { $_.FullName; });
+			$MalwarebytesAssistant = (Get-ChildItem -Path ("${MBAR_SearchDirname}") -Filter ("${MBAR_FindBasename}") -File -Recurse -Force -ErrorAction "SilentlyContinue" | ForEach-Object { $_.FullName; });
 			
 			If ($MalwarebytesAssistant -eq $Null) {
 				
@@ -518,78 +518,78 @@ function ESET_ExportModifier {
 		Write-Host "";
 		Return 1;
 	} Else {
-		$Dirname_ESET_Import = ((${Env:USERPROFILE})+("\Desktop\eset-import"));
-		$Basename_ESET_Import = (("eset-import_")+(Get-Date -UFormat "%Y%m%d-%H%M%S")+(".xml"));
-		$Filepath_ESET_Import = (($Dirname_ESET_Import)+("\")+($Basename_ESET_Import));
-		If ((Test-Path -Path ($Dirname_ESET_Import)) -eq $false) {
-			New-Item -ItemType "Directory" -Path ($Dirname_ESET_Import) | Out-Null;
+		$Dirname_NewImport = ((${Env:USERPROFILE})+("\Desktop\eset-import"));
+		$Basename_NewImport = (("eset-import_")+(Get-Date -UFormat "%Y%m%d-%H%M%S")+(".xml"));
+		$Fullpath_NewImport = (($Dirname_NewImport)+("\")+($Basename_NewImport));
+		If ((Test-Path -Path ($Dirname_NewImport)) -eq $false) {
+			New-Item -ItemType "Directory" -Path ($Dirname_NewImport) | Out-Null;
 		}
-		Set-Content -Path ($Filepath_ESET_Import) -Value (Get-Content -Path ("$ESET_ExportToCopyFrom"));
+		Set-Content -Path ($Fullpath_NewImport) -Value (Get-Content -Path ("$ESET_ExportToCopyFrom"));
+		$XmlDoc = New-Object -TypeName "System.Xml.XmlDocument";
+		$XmlDoc.Load($Fullpath_NewImport);
 		#
 		# ------------------------------------------------------------
 		#
-		# ESET - Process Exclusions
+		# [ ESET ] All Process Exclusions
 		#
-		$RowsReplaced_Processes = "";
-		$RowsStart_Processes = "";
-		$RowsBetween_Processes = "";
-		$RowsEnd_Processes = "";
-		$FoundStart_Processes = $Null;
-		$FoundEnd_Processes = $Null;
-		$RegexStart_Processes = '^     <ITEM NAME="ExcludedProcesses" DELETE="1">$';
-		$RegexEnd_Processes = '^     </ITEM>$';
-		#
-		# Prebuilt String - Process Exclusions
-		$i_FilepathName_Base10 = 1;
+		$NewExclusion = @{};
+		$NewExclusion.Type = "Process";
+		$NewExclusion.SoftwareLocation = "[ ESET Advanced Setup (Taskbar notification area + Right-Click) ] -> [ DETECTION ENGINE (Left) ] -> [ Real-time file system protection (Left) ] -> [ BASIC (Right) ] -> [ PROCESSES EXCLUSIONS (Right) ] -> [ Edit ]";
+		$NewExclusion.PreserveExportedExclusions = $True;
+		$NewExclusion.XPath_Container = "/ESET/PRODUCT[@NAME='endpoint']/ITEM[@NAME='plugins']/ITEM[@NAME='01000101']/ITEM[@NAME='settings']/ITEM[@NAME='ExcludedProcesses'][@DELETE='1']";
+		$NewExclusion.XPath_Children = "$($NewExclusion.XPath_Container)/NODE";
+
+		$NewExclusion.NextName = 0;
+		$XmlDoc | Select-Xml -XPath "$($NewExclusion.XPath_Children)" | ForEach-Object {
+			$NewExclusion.NextName = [Int]((($NewExclusion.NextName,[Int]([Convert]::ToString("0x$($_.Node.NAME)", 10))) | Measure -Max).Maximum);
+		};
+		$NewExclusion.NextName++;
+
 		$ESET_ExcludeProcesses | Select-Object -Unique | ForEach-Object {
-			$i_FilepathName_Base16 = (([Convert]::ToString($i_FilepathName_Base10, 16)).ToUpper());
-			$RowsReplaced_Processes += (('      <NODE NAME="')+($i_FilepathName_Base16)+('" TYPE="string" VALUE="')+($_)+('" />')+("`n"));
-			$i_FilepathName_Base10++;
+			$NewEle = $XmlDoc.CreateElement("NODE");
+			$NewEle.SetAttribute("NAME", ([Convert]::ToString($($NewExclusion.NextName), 16)));
+			$NewEle.SetAttribute("TYPE", "string");
+			$NewEle.SetAttribute("VALUE", $_);
+			($XmlDoc | Select-Xml -XPath "$($NewExclusion.XPath_Container)").Node.AppendChild($NewEle);
+			$NewExclusion.NextName++;
 		}
-		#
+
 		# ------------------------------------------------------------
 		#
-		# ESET - Filepath Exclusions
+		# [ ESET ] All Filepath Exclusions
 		#
-		$RowsReplaced_Filepaths = "";
-		$RowsStart_Filepaths = "";
-		$RowsBetween_Filepaths = "";
-		$RowsEnd_Filepaths = "";
-		$FoundStart_Filepaths = $Null;
-		$FoundEnd_Filepaths = $Null;
-		$RegexStart_Filepaths = '^     <ITEM NAME="ScannerExcludes" DELETE="1">$';
-		$RegexEnd_Filepaths = '^     </ITEM>$';
-		#
-		# Prebuilt String - Filepath Exclusions
-		$i_FilepathName_Base10 = 1;
+		$NewExclusion = @{};
+		$NewExclusion.Type = "Filepath";
+		$NewExclusion.SoftwareLocation = "[ ESET Advanced Setup (Taskbar notification area + Right-Click) ] -> [ DETECTION ENGINE (Left) ] -> [ BASIC (Right) ] -> [ EXCLUSIONS (Right) ] -> [ Edit ]";
+		$NewExclusion.PreserveExportedExclusions = $True;
+		$NewExclusion.XPath_Container = "/ESET/PRODUCT[@NAME='endpoint']/ITEM[@NAME='plugins']/ITEM[@NAME='01000600']/ITEM[@NAME='settings']/ITEM[@NAME='ScannerExcludes'][@DELETE='1']";
+		$NewExclusion.XPath_Children = "$($NewExclusion.XPath_Container)/ITEM";
+
+		$NewExclusion.NextName = 0;
+		$XmlDoc | Select-Xml -XPath "$($NewExclusion.XPath_Children)" | ForEach-Object {
+			$NewExclusion.NextName = [Int]((($NewExclusion.NextName,[Int]([Convert]::ToString("0x$($_.Node.NAME)", 10))) | Measure -Max).Maximum);
+		};
+		$NewExclusion.NextName++;
 		$ESET_ExcludeFilepaths | Select-Object -Unique | ForEach-Object {
-			# \*
-			$i_FilepathName_Base16 = (([Convert]::ToString($i_FilepathName_Base10, 16)).ToUpper());
-			$RowsReplaced_Filepaths += (('      <ITEM NAME="')+($i_FilepathName_Base16)+('">')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="ExcludeType" TYPE="number" VALUE="0" />')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="Infiltration" TYPE="string" VALUE="" />')+("`n"));		
-			$RowsReplaced_Filepaths += (('       <NODE NAME="FullPath" TYPE="string" VALUE="')+($_)+('\*" />')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="Flags" TYPE="number" VALUE="0" />')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="Hash" TYPE="string" VALUE="" />')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="Description" TYPE="string" VALUE="" />')+("`n"));
-			$RowsReplaced_Filepaths += (('      </ITEM>')+("`n"));
-			$i_FilepathName_Base10++;
-			# \*.*
-			$i_FilepathName_Base16 = (([Convert]::ToString($i_FilepathName_Base10, 16)).ToUpper());
-			$RowsReplaced_Filepaths += (('      <ITEM NAME="')+($i_FilepathName_Base16)+('">')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="ExcludeType" TYPE="number" VALUE="0" />')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="Infiltration" TYPE="string" VALUE="" />')+("`n"));		
-			$RowsReplaced_Filepaths += (('       <NODE NAME="FullPath" TYPE="string" VALUE="')+($_)+('\*.*" />')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="Flags" TYPE="number" VALUE="0" />')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="Hash" TYPE="string" VALUE="" />')+("`n"));
-			$RowsReplaced_Filepaths += (('       <NODE NAME="Description" TYPE="string" VALUE="" />')+("`n"));
-			$RowsReplaced_Filepaths += (('      </ITEM>')+("`n"));
-			$i_FilepathName_Base10++;
+			$EachFilepath = $_;
+			@("*","*.*") | Select-Object -Unique | ForEach-Object {
+				$NewEle = $XmlDoc.CreateElement("ITEM");
+				$NewEle.SetAttribute("NAME", ([Convert]::ToString($($NewExclusion.NextName), 16)));
+				$NewEle.InnerXml = '';
+				$NewEle.InnerXml += (('<NODE NAME="ExcludeType" TYPE="number" VALUE="0" />'));
+				$NewEle.InnerXml += (('<NODE NAME="Infiltration" TYPE="string" VALUE="" />'));		
+				$NewEle.InnerXml += (('<NODE NAME="FullPath" TYPE="string" VALUE="')+($EachFilepath)+('\')+($_)+('" />'));
+				$NewEle.InnerXml += (('<NODE NAME="Flags" TYPE="number" VALUE="0" />'));
+				$NewEle.InnerXml += (('<NODE NAME="Hash" TYPE="string" VALUE="" />'));
+				$NewEle.InnerXml += (('<NODE NAME="Description" TYPE="string" VALUE="" />'));
+				($XmlDoc | Select-Xml -XPath "$($NewExclusion.XPath_Container)").Node.AppendChild($NewEle);
+				$NewExclusion.NextName++;
+			}
 		}
-		#
+
 		# ------------------------------------------------------------
 		#
-		# ESET - Extension Exclusions
+		# [ ESET ] All Extension Exclusions
 		#
 		# $ESET_ExclExt_Content = @();
 		# $ESET_ExcludeExtensions | Select-Object -Unique | ForEach-Object {
@@ -602,78 +602,10 @@ function ESET_ExportModifier {
 		# $ReturnedStringArr += $ESET_ExclExt_Content;
 		#
 		# ------------------------------------------------------------
-		#
-		#	Parse the contents of the ESET config-file
-		#		--> Process Exclusions
-		#
-		$i_RowNum = 0;
-		Get-Content -Path ($Filepath_ESET_Import) | Select-Object | ForEach-Object {
-			If ($FoundStart_Processes -eq $Null) {
-				$RowsStart_Processes = (($RowsStart_Processes)+("`n")+($_));
-				If (([Regex]::Match($_, $RegexStart_Processes)).Success -eq $True) {
-					$FoundStart_Processes = $i_RowNum;
-				}
-			} Else {
-				If ($FoundEnd_Processes -ne $Null) {
-					$RowsEnd_Processes = (($RowsEnd_Processes)+("`n")+($_));
-				} ElseIf (([Regex]::Match($_, $RegexEnd_Processes)).Success -eq $True) {
-					$RowsEnd_Processes = (($RowsEnd_Processes)+("`n")+($_));
-					$FoundEnd_Processes = $i_RowNum;
-				} Else {
-					$RowsBetween_Processes = (($RowsBetween_Processes)+("`n")+($_));
-				}
-			}
-			$i_RowNum++;
-		}
-		# $Contents_ESET_Import = (($RowsStart_Processes)+("`n")+($RowsBetween_Processes)+("`n")+($RowsEnd_Processes));
-		$Contents_ESET_Import = (($RowsStart_Processes)+("`n")+($RowsReplaced_Processes)+("`n")+($RowsEnd_Processes));
-		$Contents_ESET_Import = $Contents_ESET_Import.Replace("`n`n", "`n");
-			$Contents_ESET_Import = $Contents_ESET_Import.Replace("`n`n", "`n");
-				$Contents_ESET_Import = $Contents_ESET_Import.Replace("`n`n", "`n");
-		$Contents_ESET_Import = $Contents_ESET_Import.Trim();
-		#
-		#
-		Set-Content -Path ($Filepath_ESET_Import) -Value ($Contents_ESET_Import);
-		#
-		#
-		# ------------------------------------------------------------
-		#
-		#	Parse the contents of the ESET config-file
-		#		--> Filepath Exclusions
-		#
-		$i_RowNum = 0;
-		Get-Content -Path ($Filepath_ESET_Import) | Select-Object | ForEach-Object {
-			If ($FoundStart_Filepaths -eq $Null) {
-				$RowsStart_Filepaths = (($RowsStart_Filepaths)+("`n")+($_));
-				If (([Regex]::Match($_, $RegexStart_Filepaths)).Success -eq $True) {
-					$FoundStart_Filepaths = $i_RowNum;
-				}
-			} Else {
-				If ($FoundEnd_Filepaths -ne $Null) {
-					$RowsEnd_Filepaths = (($RowsEnd_Filepaths)+("`n")+($_));
-				} ElseIf (([Regex]::Match($_, $RegexEnd_Filepaths)).Success -eq $True) {
-					$RowsEnd_Filepaths = (($RowsEnd_Filepaths)+("`n")+($_));
-					$FoundEnd_Filepaths = $i_RowNum;
-				} Else {
-					$RowsBetween_Filepaths = (($RowsBetween_Filepaths)+("`n")+($_));
-				}
-			}
-			$i_RowNum++;
-		}
-		# $Contents_ESET_Import = (($RowsStart_Filepaths)+("`n")+($RowsBetween_Filepaths)+("`n")+($RowsEnd_Filepaths));
-		$Contents_ESET_Import = (($RowsStart_Filepaths)+("`n")+($RowsReplaced_Filepaths)+("`n")+($RowsEnd_Filepaths));
-		$Contents_ESET_Import = $Contents_ESET_Import.Replace("`n`n", "`n");
-			$Contents_ESET_Import = $Contents_ESET_Import.Replace("`n`n", "`n");
-				$Contents_ESET_Import = $Contents_ESET_Import.Replace("`n`n", "`n");
-		$Contents_ESET_Import = $Contents_ESET_Import.Trim();
-		#
-		Set-Content -Path ($Filepath_ESET_Import) -Value ($Contents_ESET_Import);
-		#
-		# ------------------------------------------------------------
-		#
-		# 	Show the directory containing the import-file
 
-		Explorer.exe "$Dirname_ESET_Import";
+		$XmlDoc.Save($Fullpath_NewImport); # Save the updated exclusions list to the Import XML file
+
+		Explorer.exe "$Dirname_NewImport"; # Show the directory containing the import-file
 
 		# 
 		# ------------------------------------------------------------
@@ -693,7 +625,10 @@ Export-ModuleMember -Function "ESET_ExportModifier";
 #		docs.microsoft.com
 #
 #			"Add-MpPreference"
-#			https://docs.microsoft.com/en-us/powershell/module/defender/add-mppreference?view=win10-ps
+#			https://docs.microsoft.com/en-us/powershell/module/defender/add-mppreference
+#
+#			"Select-Xml"  |  "Finds text in an XML string or document"
+#			https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/select-xml
 #
 #			"Configure Windows Defender Antivirus exclusions on Windows Server"
 #			https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-antivirus/configure-server-exclusions-windows-defender-antivirus
