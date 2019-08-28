@@ -114,6 +114,7 @@
 ***
 ### Metacharacters (e.g. 'Reserved Characters')
 ###### These following are special characters, or "metacharacters", in regex. If a regular expression is to search for any of the search-criteria, they must be escaped (by preceding them with a single backslash). Most of them are errors when used alone
+* ```\.\|\*\+\?\(\)\[\]\{\-\^\$\>\\``` ALL special characters (in a copy-able string)
 * ```\```  the backslash \
 * ```^```  the caret ^
 * ```$```  the dollar sign $
@@ -270,9 +271,18 @@ Replacement: ```\u$1\l$2$3```
 ***
 ### Assorted Use-Cases
 
-* ```<[A-Za-z][A-Za-z0-9]*>``` or ```<[A-Za-z0-9]+>``` Match an HTML tag without any attributes
+###### Match an HTML tag without any attributes
+* ```<[A-Za-z][A-Za-z0-9]*>``` or ```<[A-Za-z0-9]+>```
 
-* ```^(@@[0-9a-zA-Z\_]{1,100})(\ )+(!?\ ){1}``` Match lines [ starting with "@@" ], followed by [ 1 to 100 word-characters], followed by [ one space character ], NOT followed by [ one space character ]  -  Used while searching MySQL exports for specific variable settings
+###### Match lines [ starting with "@@" ], followed by [ 1 to 100 word-characters], followed by [ one space character ], NOT followed by [ one space character ]  -  Used while searching MySQL exports for specific variable settings
+* ```^(@@[0-9a-zA-Z\_]{1,100})(\ )+(!?\ ){1}```
+
+###### Match any line ...
+######  |--> EXCLUDING lines whose text-content starts with "git-" or "git[a-z]" by using:  (?!git[a-z\-])
+######  |--> INCLUDING lines with any amount of indentation before their text-content by using:  (?:\s*)
+######  |--> INCLUDING any blank-lines by wrapping the statement as follows: (...)?
+######  |--> INCLUDING lines with fewer than 4 characters (length of excluded string "git-") by using:with few characters by using: (?:(?:(?:.\s?){0,3})|(?:(?:\S\s?){1,4}.*))
+* ```^((?:\s*)(?!git[a-z\-])(?:(?:(?:.\s?){0,3})|(?:(?:\S\s?){1,4}.*)))?$```
 
 
 

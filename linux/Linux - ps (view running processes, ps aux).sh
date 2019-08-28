@@ -4,21 +4,50 @@
 #
 # view all running processes
 
-ps aux;
+# ps aux;
 # ^-- this is NOT the same as [ ps -aux ] - do not add any dashes to the arguments list of 'aux'
+
+ps -A \
+--format 'fname,user,pid,%cpu,%mem,maj_flt,cmd' \
+--sort='user,fname';
+
+
+
+# ------------------------------------------------------------
 #
+#	Match a specific process-name, process runtikme-user, etc.
+#  |--> return any associated process-id(s) found to match
+
+
+PROC_CMD="rsyslogd"; \
+PROC_USER="syslog"; \
+PROC_FORMAT="fname,user,pid,%cpu,%mem,maj_flt,cmd"; \
+PROC_GET_COLNO="3"; \
+PROC_RESULTS=$( \
+ps -A --format "${PROC_FORMAT}" \
+| sed --regexp-extended --quiet --expression='s/^('${PROC_CMD:-\S+}')\s+('${PROC_USER:-\S+}')\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+).*$/\'${PROC_GET_COLNO}'/p' \
+); \
+echo -e "\n\nPROC_RESULTS:"; \
+echo -e "${PROC_RESULTS}\n\n";
+
+
+
 # ------------------------------------------------------------
 #
 #	get the absolute path (of a running process)
 
 sudo ls -l /proc/PID/exe;
-#
+
+
+
 # ------------------------------------------------------------
 #
 #	get the working directory (of a running process)
 
 pwdx $pid;
-#
+
+
+
 # ------------------------------------------------------------
 #
 # Determine linux-user running a given process
@@ -41,6 +70,8 @@ echo "PROCESS_GNAME = ${PROCESS_GNAME}"; \
 echo "PROCESS_GID = ${PROCESS_GID}"; \
 echo "PROCESS_UID = ${PROCESS_UID}"; \
 echo "";
+
+
 
 # ------------------------------------------------------------
 # > man ps
