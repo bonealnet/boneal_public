@@ -1,39 +1,24 @@
 # ------------------------------------------------------------
 #
-#	If [ Not Null/Unset ]
+#	IF VARIABLE IS SET/EMPTY
 #
-#	Example
-#		Determine if [string] variable has a value using [ -n ] comparator
 
-VAR="hello"
-if [ -n "${VAR}" ]; then
-	echo "VAR has a value of \"${VAR}\"";
+if [ -z ${var+x} ]; then # Note: Do NOT wrap ${var+x} with quotes
+	# UNSET
+	echo "\$var is unset";
+elif [ -z "${var}" ]; then
+	# SET, EMPTY
+	echo "\$var is set but empty";
 else
-	echo "VAR is Null/Unset";
+	# SET, NOT-EMPTY
+	echo "\$var is set to '$var'";
 fi;
 
 
 
 # ------------------------------------------------------------
 #
-#	If [ Null/Unset ]
-#
-#	Example
-#		Use parameter expansion to determine if a given VAR has been instantiated:  ${<VAR>+x}
-#		( Citation: Thanks to user 'Cheeso' on stackoverflow - https://stackoverflow.com/questions/3601515 )
-#
-
-if [ -z ${VAR+x} ]; then
-	echo "VAR is Null/Unset";
-else
-	echo "VAR is set to '${VAR}'";
-fi;
-
-
-
-# ------------------------------------------------------------
-#
-#		If [ Not-Null ]
+#	IF STRING EQUALS ... EXACTLY
 #
 
 if [ -n "${SUBDOMAIN}" ] && [ -n "${DOMAIN}" ]; then # vars are both set & not empty
@@ -45,39 +30,37 @@ fi;
 
 
 
-# ------------------------------------------------------------
-#
-#		If [ String == String ]
-#
-if [ "${s1}" == "${s2}" ]; then
-	echo "Strings ARE equal ";
-else
-	echo "Strings are NOT equal";
-fi;
-
-
 
 # ------------------------------------------------------------
 #
-#	If [ Needle-in-Haystack ]
-#
-#	Example
-#		Perform a case-insensitive substring comparison
-#		( Citation: Thanks to user 'marcog' on stackoverflow - https://stackoverflow.com/questions/4277665 )
+#	IF STRING EQUALS ...
+#	    |--> Test if a given string (LEFT) is an exact match to a known value (RIGHT)
 #
 
-if [[ "${HAYSTACK}" == *"${NEEDLE}"* ]]; then # Needle found in haystack
-	echo "Haystack \"${HAYSTACK}\" contains Needle \"${NEEDLE}\"";
-else
-	echo "Needle \"${NEEDLE}\" not found in Haystack \"${HAYSTACK}\"";
-fi;
+if [ "string" == "value" ]; then echo 1; else echo 0; fi;
 
 
 
 # ------------------------------------------------------------
 #
-#	If [ String passes regex test ]
+#	IF STRING CONTAINS ...
+#	    |--> Test if a string (LEFT) contains a given substring/value (RIGHT) using [ Needle-in-Haystack ] methodology
 #
+
+if [[ "string" == *"needle"* ]]; then echo 1; else echo 0; fi;
+
+
+
+# ------------------------------------------------------------
+#
+#	IF STRING MATCHES REGEX-PATTERN
+#	    |--> Note: Do NOT wrap regex pattern in quotes
+#
+
+if [[ "string" =~ pattern ]]; then echo 1; else echo 0; fi;
+
+
+
 #
 #	Example
 #		Check to see if string is a date in 'yyyymmdd' format
@@ -213,11 +196,15 @@ done;
 
 # ------------------------------------------------------------
 #
-#	Comparing two values directly (which is greater, etc.)
-#
-#	Includes logic for Integers, Floats/Doubles, and Strings (ASCII)
+#	Variable Comparisons
+#		|--> Includes logic for Integers, Floats/Doubles, and Strings (ASCII)
 #
 # ------------------------------------------------------------
+#
+#
+#  ==		String (IS_INTEGER TEST):
+#					if [[ $A =~ ^-?[0-9]+$ ]]   :::   True if $A is an integer (string input, only)
+#					if [[ "$A" =~ ^-?[0-9]+$ ]]   :::   True if $A is an integer (strings, integer, or float input)
 #
 #
 #
@@ -225,11 +212,11 @@ done;
 #					if [ "$A" == "$B" ]  :::  True if $A is equal to $B
 #  ==		Integers:
 #					if [ $A -eq $B ]     :::  True if $A is equal to $B
-#					if [ "$a" == "z*" ]  :::  True if $A is equal to z* (literal matching).
-#					if [ $a == z* ]      :::  File globbing and word splitting take place.
-#					if [[ $A == z* ]]    :::  True if $A starts with an "z" (string pattern matching).
-#					if [ "$a" == "z*" ]  :::  True if $A is equal to z* (literal matching).
-#					if [[ $a == "z*" ]]  :::  True if $a is equal to z* (literal matching).
+#					if [ "$a" == "z*" ]  :::  True if $A is equal to z* (literal matching)
+#					if [ $a == z* ]      :::  File globbing and word splitting take place
+#					if [[ $A == z* ]]    :::  True if $A starts with an "z" (string pattern matching)
+#					if [ "$a" == "z*" ]  :::  True if $A is equal to z* (literal matching)
+#					if [[ $a == "z*" ]]  :::  True if $a is equal to z* (literal matching)
 #  ==		Floats/Doubles:
 #					if [ $(echo "$A == $B" | bc) -eq 1 ]; then echo "$A IS equal to $B"; else echo "$A ISNT equal to $B"; fi;
 #
@@ -284,7 +271,7 @@ done;
 #
 # ------------------------------------------------------------
 #
-#  Check whether a string contains non-numeric characters.
+#  Check whether a string contains non-numeric characters
 #    |--> Replace all digit characters with blanks (remove them) then get the final length of the string
 #    |--> Any value greater than 0 for the length of the string means non-integer character(s) were found
 #
@@ -316,51 +303,76 @@ done;
 #
 # ------------------------------------------------------------
 #
-# Filepath Conditionals   (whether path exists or not, is readable, is writeable, etc.)
+# Bash Conditional Expressions
 #
-#
-#			-a FILE  :::  True if file exists.
-#			-b FILE  :::  True if file exists and is a block special file.
-#			-c FILE  :::  True if file exists and is a character special file.
-#			-d FILE  :::  True if file exists and is a directory.
-#			-e FILE  :::  True if file exists.
-#			-f FILE  :::  True if file exists and is a regular file.
-#			-g FILE  :::  True if file exists and its set-group-id bit is set.
-#			-h FILE  :::  True if file exists and is a symbolic link.
-#			-k FILE  :::  True if file exists and its "sticky" bit is set.
-#			-p FILE  :::  True if file exists and is a named pipe (FIFO).
-#			-r FILE  :::  True if file exists and is readable.
-#			-s FILE  :::  True if file exists and has a non-zero filesize.
-#			-t FD    :::  True if file descriptor fd is open and refers to a terminal.
-#			-u FILE  :::  True if file exists and its set-user-id bit is set.
-#			-w FILE  :::  True if file exists and is writable.
-#			-x FILE  :::  True if file exists and is executable.
-#			-G FILE  :::  True if file exists and is owned by the effective group id.
-#			-L FILE  :::  True if file exists and is a symbolic link.
-#			-N FILE  :::  True if file exists and has been modified since it was last read.
-#			-O FILE  :::  True if file exists and is owned by the effective user id.
-#			-S FILE  :::  True if file exists and is a socket.
-#
-#
-#
+
+-a FILE  :::  True if file exists
+-b FILE  :::  True if file exists and is a block special file
+-c FILE  :::  True if file exists and is a character special file
+-d FILE  :::  True if file exists and is a directory
+-e FILE  :::  True if file exists
+-f FILE  :::  True if file exists and is a regular file
+-g FILE  :::  True if file exists and its set-group-id bit is set
+-h FILE  :::  True if file exists and is a symbolic link
+-k FILE  :::  True if file exists and its "sticky" bit is set
+-p FILE  :::  True if file exists and is a named pipe (FIFO)
+-r FILE  :::  True if file exists and is readable
+-s FILE  :::  True if file exists and has a non-zero filesize
+-t FD    :::  True if file descriptor fd is open and refers to a terminal
+-u FILE  :::  True if file exists and its set-user-id bit is set
+-w FILE  :::  True if file exists and is writable
+-x FILE  :::  True if file exists and is executable
+-G FILE  :::  True if file exists and is owned by the effective group id
+-L FILE  :::  True if file exists and is a symbolic link
+-N FILE  :::  True if file exists and has been modified since it was last read
+-O FILE  :::  True if file exists and is owned by the effective user id
+-S FILE  :::  True if file exists and is a socket
+
+
+FILE1 -ef FILE2  :::  True if file1 and file2 refer to the same device and inode numbers
+FILE1 -nt FILE2  :::  True if file1 is newer (according to modification date) than file2, or if file1 exists and file2 does not
+FILE1 -ot FILE2  :::  True if file1 is older than file2, or if file2 exists and file1 does not
+
+-o OPT_NAME  :::  True if the shell option OPT_NAME is enabled | The list of options appears in the description of the -o option to the set builtin (see The Set Builtin)
+
+-v VAR  :::  True if the shell variable VAR is set (has been assigned a value)
+-R VAR  :::  True if the shell variable VAR is set and is a name reference
+
+-z STRING  :::  True if the length of string is zero
+-n STRING  :::  True if the length of string is non-zero
+STR1 == STR2  :::  True if the strings are equal. Using '[[' evaluates using pattern matching
+STR1 = STR2   :::  True if the strings are equal. '=' should be used with 'test' command for POSIX conformance
+STR1 != STR2  :::  True if the strings are not equal
+STR1 < STR2   :::  True if string1 sorts before string2 lexicographically
+STR1 > STR2   :::  True if string1 sorts after string2 lexicographically
+
+
+INT1 -eq INT2  :::  True if arg1 is [ equal to ]                     arg2. Wrapping w/ '[' evaluates as a logical expression, '[[' as an arithmetic expression
+INT1 -ne INT2  :::  True if arg1 is [ not equal to ]                 arg2. Wrapping w/ '[' evaluates as a logical expression, '[[' as an arithmetic expression
+INT1 -lt INT2  :::  True if arg1 is [ less than ]                    arg2. Wrapping w/ '[' evaluates as a logical expression, '[[' as an arithmetic expression
+INT1 -le INT2  :::  True if arg1 is [ less than ] or [ equal to ]    arg2. Wrapping w/ '[' evaluates as a logical expression, '[[' as an arithmetic expression
+INT1 -gt INT2  :::  True if arg1 is [ greater than ]                 arg2. Wrapping w/ '[' evaluates as a logical expression, '[[' as an arithmetic expression
+INT1 -ge INT2  :::  True if arg1 is [ greater than ] or [ equal to ] arg2. Wrapping w/ '[' evaluates as a logical expression, '[[' as an arithmetic expression
+
+
 # ------------------------------------------------------------
 #
 # Citation(s)
-#		
-#		www.tldp.org
-#		"7.3. Other Comparison Operators" (Integer/String Conditionals)
-#		 https://www.tldp.org/LDP/abs/html/comparison-ops.html
 #
-#		
-#		www.gnu.org
-#		"6.4 Bash Conditional Expressions"
-#		 https://www.gnu.org/software/bash/manual/bashref.html#Bash-Conditional-Expressions
+#		www.tldp.org  |  "7.3. Other Comparison Operators" (Integer/String Conditionals)  |  https://www.tldp.org/LDP/abs/html/comparison-ops.html
 #
-#		
-#		stackoverflow.com
-#		"Is there an easy way to determine if user input is an integer in bash?"
-#		 https://stackoverflow.com/questions/4137262
+#		www.gnu.org  |  "6.4 Bash Conditional Expressions"  |  https://www.gnu.org/software/bash/manual/bashref.html#Bash-Conditional-Expressions
 #
+#		www.gnu.org  |  "6.5 Shell Arithmetic"  |  https://www.gnu.org/software/bash/manual/html_node/Shell-Arithmetic.html#Shell-Arithmetic
+#
+#		pubs.opengroup.org  |  "2.6.2 Parameter Expansion"  |  https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_06_02
+#
+#		stackexchange.com  |  "Bash regex =~ operator"  |  https://unix.stackexchange.com/a/340485
+#
+#		stackoverflow.com  |  "How to check if a variable is set in Bash?"  |  https://stackoverflow.com/a/13864829
+#
+#		stackoverflow.com  |  "Is there an easy way to determine if user input is an integer in bash?"  |  https://stackoverflow.com/a/4141321
+#		
 #
 #
 # ------------------------------------------------------------

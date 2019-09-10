@@ -4,10 +4,10 @@ REM			ImageMagick" must be installed for this script to function as-intended
 REM			https://www.imagemagick.org/script/download.php#windows
 ECHO.
 
-SET "INPUT_DIR=__TO_BE_TRIMMED"
-SET "OUTPUT_DIR=_FINISHED_ITEMS"
+SET "INPUT_DIR=Input"
+SET "OUTPUT_DIR=Output"
 
-SET ResizeToWidthPx=2000
+SET ResizeToWidthPx=1000
 
 FOR %%I IN ("%INPUT_DIR%\*.jpg") DO (
 
