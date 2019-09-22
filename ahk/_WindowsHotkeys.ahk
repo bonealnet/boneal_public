@@ -1,4 +1,4 @@
-﻿;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+﻿; ------------------------------------------------------------
 ;
 ;            >>>   _WindowsHotkeys.ahk, by Cavalol   <<<
 ;         AutoHotkey DL: https://autohotkey.com/download/
@@ -22,7 +22,7 @@
 ;  Run/RunWait  :::  https://autohotkey.com/docs/commands/Run.htm
 ;  SysGet  :::  https://autohotkey.com/docs/commands/SysGet.htm
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 ; GLOBAL SETTINGS
 
@@ -44,7 +44,7 @@ SetCapsLockState, Off
 
 ; #EscapeChar \  ; Change it to be backslash instead of the default of accent (`).
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 ; GLOBAL VARIABLES
 
@@ -60,7 +60,7 @@ CR=`r
 
 LF=`n
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 ; Setup a group for targeting [Windows Explorer] windows
 
@@ -68,7 +68,7 @@ GroupAdd, Explorer, ahk_class ExploreWClass ; Unused on Vista and later
 
 GroupAdd, Explorer, ahk_class CabinetWClass
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 
 TEMP_AHK = %A_Temp%\AutoHotkey\
 IfNotExist, %TEMP_AHK%
@@ -76,7 +76,7 @@ IfNotExist, %TEMP_AHK%
 	FileCreateDir, %TEMP_AHK%
 }
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;	Tooltip clearing tool(s)
 
 RemoveToolTip() {
@@ -92,7 +92,7 @@ ClearTooltip(TimerPeriod) {
 	Return
 }
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;	SplashText clearing tool(s)
 
 RemoveSplashText() {
@@ -108,7 +108,7 @@ ClearSplashText(TimerPeriod) {
 	Return
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;   HOTKEY:  Win + Esc
 ;   ACTION:  Refresh This Script  ::: Closes then re-opens this script (Allows saved changes to THIS script (file) be tested/applied on the fly)
 ;
@@ -119,11 +119,11 @@ ClearSplashText(TimerPeriod) {
 	IfMsgBox, Yes, Edit
 	Return
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;   HOTKEY:  Win + A
+; ------------------------------------------------------------
+;   HOTKEY:  ???
 ;		ACTION:  Attempt to re-run the current program with escalated/elevated privileges (e.g. rerun the current program as admin)
 ;
-;#A::
+; ???::
 ; 	(PSEUDO-CODE)  CHECK IF WINDOW IS ALREADY RUNNING AS ADMIN -> IF YES, DO NOTHING
 ; ;;;
 ; 	(PSEUDO-CODE)  GET ACTIVE WINDOW'S EXE-PATH
@@ -134,7 +134,7 @@ ClearSplashText(TimerPeriod) {
 ; ;;;
 ; 	Return
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;   HOTKEY:  Win + Z
 ;		ACTION:  Grabs information about current (active) window's exe-filepath, process-id, on-screen location, & more, and displays it in a popup table Gui
 ;
@@ -179,7 +179,7 @@ ClearSplashText(TimerPeriod) {
 
 	Gui, Add, ListView, %GUI_OPT%, Key|Value
 
-	LV_Add("", "Title", WinTitle)
+	LV_Add("", "WinTitle", WinTitle)
 	LV_Add("", "Class", WinClass)
 	LV_Add("", "ProcessName", WinProcessName)
 	LV_Add("", "ProcessPath", WinProcessPath)
@@ -235,7 +235,7 @@ OnClick_LV_WindowSpecs() {
 }
 
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;   HOTKEY:  Win + -
 ;		ACTION:  Type a line of -----'s
 ;
@@ -243,7 +243,7 @@ OnClick_LV_WindowSpecs() {
 	OpenVSCode()
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;   HOTKEY:  Win + V
 ;		ACTION:  Open Program (see below)
 ;
@@ -253,7 +253,7 @@ OnClick_LV_WindowSpecs() {
 	SendInput, ------------------------------------------------------------
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;   HOTKEY:  Win + Alt + V
 ;		ACTION:  Open Program (see below)
 ;
@@ -261,7 +261,7 @@ OnClick_LV_WindowSpecs() {
 	OpenVisualStudio()
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 GetTimezoneOffset() {
 	RET_VAL := ""
@@ -305,7 +305,7 @@ GetTimezoneOffset_P() {
 	Return %RET_VAL%
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ; 
 ; Repeat a string a given number of times
 StringRepeat(StrToRepeat, Multiplier) {
@@ -318,7 +318,7 @@ StringRepeat(StrToRepeat, Multiplier) {
 	Return ReturnedVal
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Win + D
 ;  ACTION:  Types a variety of timestamp strings
 ;
@@ -372,7 +372,7 @@ StringRepeat(StrToRepeat, Multiplier) {
 
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  ?????
 ;  ACTION:  On-the-fly Timezone w/ format: [  -0500  ]
 ;
@@ -381,7 +381,7 @@ StringRepeat(StrToRepeat, Multiplier) {
 ;   Send %TZ_OFFSET%
 ; 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Win + P
 ;  ACTION:  type the clipboard (workaround for paste blocking web-scripts)
 ;
@@ -449,7 +449,7 @@ CustomMsgboxButtons_ClipboardPaste:
 	Return
 
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Win + H
 ;  ACTION:  type the COMPUTERNAME
 ;
@@ -459,7 +459,7 @@ CustomMsgboxButtons_ClipboardPaste:
   Send %RET_VAL%
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Win + U
 ;  ACTION:  type the DOMAIN-USERNAME
 ;
@@ -470,7 +470,7 @@ CustomMsgboxButtons_ClipboardPaste:
   Send %RET_VAL%
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Win + G
 ;  ACTION:  Types the contents of target file
 ;
@@ -480,7 +480,7 @@ CustomMsgboxButtons_ClipboardPaste:
 	SendInput, %FilePathContents%
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Win + W
 ;  ACTION:  Types the contents of target file
 ;
@@ -490,7 +490,7 @@ CustomMsgboxButtons_ClipboardPaste:
 	SendInput, %FilePathContents%
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 ;  ACTION:  On-the-fly Timezone w/ format: [  -0500  ]
 ;  HOTKEY:  Win + G
@@ -498,12 +498,12 @@ CustomMsgboxButtons_ClipboardPaste:
 	Run Notepad %A_ScriptFullPath%
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Shift + Win + F2
 ;  ACTION:  Win10 Download & Delete Recordings via XBox Win10 App  !!! MAKE SURE TO HIDE SCREENSHOTS BEFOREHAND !!!
 ;
 +#F2::
-	CoordMode,Mouse,Screen
+	CoordMode, Mouse, Screen
 	SetDefaultMouseSpeed, 0
 	SetControlDelay, -1
 	SetTitleMatchMode, 1
@@ -532,7 +532,7 @@ CustomMsgboxButtons_ClipboardPaste:
 	}
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 ; #SC03D::   ; Win + F3
 #F3::   ; Win + F3
@@ -547,7 +547,7 @@ CustomMsgboxButtons_ClipboardPaste:
 		Sleep 7500
 	}
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Win + F2
 ;  ACTION:  Show all (current) Window Titles
 ;
@@ -578,20 +578,20 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	Return
 }
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Fn Key (X1 Carbon)
 ;  ACTION:  Set Fn to perform CTRL action, instead
 ;
 ;SC163::   ;"Fn" Key
 ;Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + [
 ;  ACTION:  FOLLOW-UP HOTKEY TO: Windows-key P   :::   Click "Duplicate" monitors
 ;
 #[::
 #]::
-	CoordMode,Mouse,Screen
+	CoordMode, Mouse, Screen
 	SetDefaultMouseSpeed, 0
 	SetControlDelay, -1
 	SetTitleMatchMode, 1
@@ -680,7 +680,7 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	Return
 
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Apps-Key keypress (square menu button, commonly next to right-ctrl on keyboard)
 ;  ACTION:  Send Windows-Key Keypress, instead
 ;
@@ -693,12 +693,12 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 ;	Return
 
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + Right-Click
 ;  ACTION:  Output cursor location
 ;
 #RButton::
-	CoordMode,Mouse,Screen
+	CoordMode, Mouse, Screen
 	MouseGetPos, MouseX, MouseY
 	MsgBox,
 	(LTrim
@@ -708,14 +708,14 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	)
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 
 ; #;::
 	; LockWorkstation()
 	; ShowScreenSaver()
 	; Return
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + N
 ;  ACTION:  Opens "View Network Connections" (in the Control Panel)
 ; 
@@ -723,7 +723,7 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	Run ::{7007acc7-3202-11d1-aad2-00805fc1270e}
 	Return
 ; 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + E
 ;  ACTION:  Opens "USERPROFILE" directory
 ; 
@@ -732,7 +732,7 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	Run %UserProfileDirname%
 	Return
 ; 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + O
 ;  ACTION:  Opens "Programs & Features" in the Control Panel
 ;
@@ -740,7 +740,7 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	Run "c:\windows\system32\appwiz.cpl"
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + ` (Tilde)
 ;  ACTION:  Keyboard-Command for a Mouse-Left-Click
 ;
@@ -748,7 +748,7 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	MouseClick, Left
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Alt + ` (Tilde)
 ;  ACTION:  Keyboard-Command for a Mouse-Right-Click
 ;
@@ -756,7 +756,7 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	MouseClick, Right
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Win + Mouse-Wheel Up/Down
 ;  ACTION:  Turn computer volume up/down
 ;
@@ -887,7 +887,7 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	ClearTooltip(750)
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Alt + Mouse-Wheel Up/Down
 ;  ACTION:  "SuperScroll" - scrolls 15 wheel-clicks at a time
 ;
@@ -899,7 +899,7 @@ OnDoubleClick_GuiDestroy_WinTitles() {
 	MouseClick,WheelDown,,,15,0,D,R
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  "Rock" the Mouse's Wheel Left or Right   (Mouse-Wheel-Left or Mouse-Wheel-Right)
 ;  ACTION:  Change Tabs Left or Right
 ;
@@ -910,7 +910,7 @@ WheelRight::
 	Send ^{PgDn}
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Shift + Insert
 ;  ACTION:  If running Ubuntu via WSL (Windows Subsystem for Linux), Paste the clipboard
 ;
@@ -940,16 +940,37 @@ WheelRight::
 ; 	; }
 ; 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;  HOTKEY:  Windows-Key + C
-;  ACTION:  Chrome - Open a New Instance of Google Chrome
+; ------------------------------------------------------------
+;  HOTKEY:  Windows-Key + A
+;  ACTION:  Foxit PhantomPDF - Add Text
 ;
-#C::
-	OpenChrome()
-	; TabSpace_Loop(50)
+#A::
+	CoordMode, Mouse, Screen
+	SetDefaultMouseSpeed, 0
+	SetControlDelay, -1
+	SetTitleMatchMode, 2
+	WinTitle=Foxit PhantomPDF
+	x_loc = 223
+	y_loc = 40
+	ControlClick, x%x_loc% y%y_loc%, %WinTitle%
+	Sleep 100
+	x_loc = 355
+	y_loc = 63
+	ControlClick, x%x_loc% y%y_loc%, %WinTitle%
 	Return
+
+
+; ------------------------------------------------------------
+;  HOTKEY:  Windows-Key + K
+;  ACTION:  Send a Checkmark
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+#K::
+	SetKeyDelay, 0, -1
+	Send ✔
+	Return
+
+
+; ------------------------------------------------------------
 ;  HOTKEY:  Ctrl + Win + C
 ;  ACTION:  Workbench hotkey for quick-testing, one-time wizbangs, etc.
 ;
@@ -959,8 +980,9 @@ WheelRight::
 	; SpaceUp_Loop(50, WinTitle)
 	SpaceUp_Loop(50)
 	Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+; ------------------------------------------------------------
 ;  HOTKEY:  Windows-Key + F
 ;  ACTION:  Effective File Search - Open a new Instance of EFS
 ;
@@ -986,8 +1008,9 @@ WheelRight::
 		}
 	}
 	Return
-;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+; ------------------------------------------------------------
 ;  HOTKEY:  Left-Shift + Right-Shift  (Both Shifts/Shift-Keys)
 ;  ACTION:  Maximize Current Window
 ;
@@ -1002,8 +1025,8 @@ LShift & RShift::
 	ActiveWindow_ToggleRestoreMaximize()
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
+; ------------------------------------------------------------
 ;  Win+J - [DevOps] - Startup Node.JS (Git-Bash) && Postman
 ;
 #J::
@@ -1105,7 +1128,7 @@ LShift & RShift::
 	}
 	Return
 ;
-;	----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  Win+T - [DevOps] - Get Windows Environment Variables (output to desktop)
 ;
 #T::
@@ -1175,122 +1198,122 @@ LShift & RShift::
 	Run, Edit "%Logfile_EnvVars_Timestamp%"
 	Return
 ;
-;	----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  Win+K - [DevOps] - Bring-to-Foreground:  Node.JS (Git-Bash) && Postman
-#K::
-	;
-	WinTitle_NodeJS=Supplier Gateway (localhost)
-	WinTitle_Postman=Postman
-	; MsgBox, A_OSVersion = %A_OSVersion%
-	;
-	; Windows sets some weird values for its bounds when a window is maximized
-	if (A_OSVersion = "WIN_7") {
-		; Windows 7 OS
-		Increment_Left := 0
-		Increment_Top := 0
-		Increment_Width := 0
-		Increment_Height := 0
-	} else {
-		; Non Windows-7 OS
-		Increment_Left := -7
-		Increment_Top := 0
-		Increment_Width := 14
-		Increment_Height := 7
-	}
-	; Prep Monitor Widths/Heights
-	SysGet, MonitorCount, MonitorCount , N
-	BoundsLeft = -1
-	BoundsRight = -1
-	BoundsTop = -1
-	BoundsBottom = -1
-	BoundsCenterHoriz = 0
-	BoundsCenterVert = 0
-	Loop, %MonitorCount% {
-		SysGet, MonitorWorkArea, MonitorWorkArea, %A_Index%
-		If (BoundsLeft < MonitorWorkAreaLeft)
-		{
-			; MsgBox, Floor(BoundsLeft) < Floor(MonitorWorkAreaLeft)
-			; Widths
-			BoundsLeft := MonitorWorkAreaLeft
-			BoundsRight := MonitorWorkAreaRight
-			; Heights
-			BoundsTop := MonitorWorkAreaTop
-			BoundsBottom := MonitorWorkAreaBottom
-		}
-	}
-	; Widths
-	BoundsWidthFull := (BoundsRight - BoundsLeft)
-	BoundsWidthHalf := Floor(BoundsWidthFull/2)
-	BoundsCenterHoriz := (BoundsLeft + BoundsWidthHalf)
-	; Heights
-	BoundsHeightFull := (BoundsBottom - BoundsTop)
-	BoundsHeightHalf := Floor(BoundsHeightFull/2)
-	BoundsCenterVert := (BoundsTop + BoundsHeightHalf)
-	SetTitleMatchMode, 1
-	IfWinExist,%WinTitle_NodeJS%
-	{
-		IfWinExist,%WinTitle_Postman%
-		{
-			;
-			; SIMULATE: Snap Left / Snap Right
-			;
-			if (MonitorCount = 2) {
-				;
-				; 2-Monitors
-				;
-				if (A_OSVersion = "WIN_7") {
-					; Msgbox, AAA
-					WinMove,%WinTitle_NodeJS%,,1920,0,960,1080
-					WinMove,%WinTitle_Postman%,,2880,0,960,1080
-					;
-					;		Win7
-					;			Left-Mon (Mon-1)
-					; 			Left-Snap   -->  WinMove,%WinTitle%,,0,0,960,1040       ; w/ taskbar
-					; 			Right-Snap  -->  WinMove,%WinTitle%,,960,0,960,1040     ; w/ taskbar
-					; 			Maximized   -->  WinMove,%WinTitle%,,-8,-8,1936,1056    ; w/ left-taskbar
-					; 		Right-Mon (Mon-2)
-					; 			Left-Snap   -->  WinMove,%WinTitle%,,1920,0,960,1080       ; w/ no taskbar
-					; 			Right-Snap  -->  WinMove,%WinTitle%,,2880,0,960,1080     ; w/ no taskbar
-					; 			Maximized   -->  WinMove,%WinTitle%,,-8,-8,1936,1056    ; w/ no taskbar
-					;
-				} Else {
-					; Msgbox, BBB
-					WinMove,%WinTitle_NodeJS%,,1913,0,974,1047
-					WinMove,%WinTitle_Postman%,,2873,0,974,1047
-					;
-					;		Win10
-					; 		Left-half,  Left-Mon   -->  WinMove,%WinTitle%,,-7,0,974,1047      ; w/ taskbar
-					; 		Right-half, Left-Mon   -->  WinMove,%WinTitle%,,953,0,974,1047    ; w/ taskbar
-					; 		Left-half,  Right-Mon  -->  WinMove,%WinTitle%,,1913,0,974,1047    ; w/ taskbar
-					; 		Right-half, Right-Mon  -->  WinMove,%WinTitle%,,2873,0,974,1047   ; w/ taskbar
-					;
-					; WinMove,%WinTitle_NodeJS%,,%BoundsLeft%,%BoundsTop%,%BoundsWidthHalf%,%BoundsHeightFull%
-				}
-			} Else {
-				; Not-2-Monitors (Assumes 1)
-				if (A_OSVersion = "WIN_7") {
-					; Win-7, 1-Monitor
-					; Msgbox, CCC
-					WinMove,%WinTitle_NodeJS%,,0,0,960,1040
-					WinMove,%WinTitle_Postman%,,960,0,960,1040
-				} Else {
-					; Win-10, 1-Monitor
-					; Msgbox, DDD
-					WinMove,%WinTitle_NodeJS%,,1913,0,974,1047
-					WinMove,%WinTitle_Postman%,,2873,0,974,1047
-				}
-			}
-			WinActivate,%WinTitle_NodeJS%
-			WinActivate,%WinTitle_Postman%
-		} Else {
-			; Msgbox, EEE
-		}
-	} Else {
-		; Msgbox, FFF
-	}
-	Return
+; #K::
+; 	;
+; 	WinTitle_NodeJS=Supplier Gateway (localhost)
+; 	WinTitle_Postman=Postman
+; 	; MsgBox, A_OSVersion = %A_OSVersion%
+; 	;
+; 	; Windows sets some weird values for its bounds when a window is maximized
+; 	if (A_OSVersion = "WIN_7") {
+; 		; Windows 7 OS
+; 		Increment_Left := 0
+; 		Increment_Top := 0
+; 		Increment_Width := 0
+; 		Increment_Height := 0
+; 	} else {
+; 		; Non Windows-7 OS
+; 		Increment_Left := -7
+; 		Increment_Top := 0
+; 		Increment_Width := 14
+; 		Increment_Height := 7
+; 	}
+; 	; Prep Monitor Widths/Heights
+; 	SysGet, MonitorCount, MonitorCount , N
+; 	BoundsLeft = -1
+; 	BoundsRight = -1
+; 	BoundsTop = -1
+; 	BoundsBottom = -1
+; 	BoundsCenterHoriz = 0
+; 	BoundsCenterVert = 0
+; 	Loop, %MonitorCount% {
+; 		SysGet, MonitorWorkArea, MonitorWorkArea, %A_Index%
+; 		If (BoundsLeft < MonitorWorkAreaLeft)
+; 		{
+; 			; MsgBox, Floor(BoundsLeft) < Floor(MonitorWorkAreaLeft)
+; 			; Widths
+; 			BoundsLeft := MonitorWorkAreaLeft
+; 			BoundsRight := MonitorWorkAreaRight
+; 			; Heights
+; 			BoundsTop := MonitorWorkAreaTop
+; 			BoundsBottom := MonitorWorkAreaBottom
+; 		}
+; 	}
+; 	; Widths
+; 	BoundsWidthFull := (BoundsRight - BoundsLeft)
+; 	BoundsWidthHalf := Floor(BoundsWidthFull/2)
+; 	BoundsCenterHoriz := (BoundsLeft + BoundsWidthHalf)
+; 	; Heights
+; 	BoundsHeightFull := (BoundsBottom - BoundsTop)
+; 	BoundsHeightHalf := Floor(BoundsHeightFull/2)
+; 	BoundsCenterVert := (BoundsTop + BoundsHeightHalf)
+; 	SetTitleMatchMode, 1
+; 	IfWinExist,%WinTitle_NodeJS%
+; 	{
+; 		IfWinExist,%WinTitle_Postman%
+; 		{
+; 			;
+; 			; SIMULATE: Snap Left / Snap Right
+; 			;
+; 			if (MonitorCount = 2) {
+; 				;
+; 				; 2-Monitors
+; 				;
+; 				if (A_OSVersion = "WIN_7") {
+; 					; Msgbox, AAA
+; 					WinMove,%WinTitle_NodeJS%,,1920,0,960,1080
+; 					WinMove,%WinTitle_Postman%,,2880,0,960,1080
+; 					;
+; 					;		Win7
+; 					;			Left-Mon (Mon-1)
+; 					; 			Left-Snap   -->  WinMove,%WinTitle%,,0,0,960,1040       ; w/ taskbar
+; 					; 			Right-Snap  -->  WinMove,%WinTitle%,,960,0,960,1040     ; w/ taskbar
+; 					; 			Maximized   -->  WinMove,%WinTitle%,,-8,-8,1936,1056    ; w/ left-taskbar
+; 					; 		Right-Mon (Mon-2)
+; 					; 			Left-Snap   -->  WinMove,%WinTitle%,,1920,0,960,1080       ; w/ no taskbar
+; 					; 			Right-Snap  -->  WinMove,%WinTitle%,,2880,0,960,1080     ; w/ no taskbar
+; 					; 			Maximized   -->  WinMove,%WinTitle%,,-8,-8,1936,1056    ; w/ no taskbar
+; 					;
+; 				} Else {
+; 					; Msgbox, BBB
+; 					WinMove,%WinTitle_NodeJS%,,1913,0,974,1047
+; 					WinMove,%WinTitle_Postman%,,2873,0,974,1047
+; 					;
+; 					;		Win10
+; 					; 		Left-half,  Left-Mon   -->  WinMove,%WinTitle%,,-7,0,974,1047      ; w/ taskbar
+; 					; 		Right-half, Left-Mon   -->  WinMove,%WinTitle%,,953,0,974,1047    ; w/ taskbar
+; 					; 		Left-half,  Right-Mon  -->  WinMove,%WinTitle%,,1913,0,974,1047    ; w/ taskbar
+; 					; 		Right-half, Right-Mon  -->  WinMove,%WinTitle%,,2873,0,974,1047   ; w/ taskbar
+; 					;
+; 					; WinMove,%WinTitle_NodeJS%,,%BoundsLeft%,%BoundsTop%,%BoundsWidthHalf%,%BoundsHeightFull%
+; 				}
+; 			} Else {
+; 				; Not-2-Monitors (Assumes 1)
+; 				if (A_OSVersion = "WIN_7") {
+; 					; Win-7, 1-Monitor
+; 					; Msgbox, CCC
+; 					WinMove,%WinTitle_NodeJS%,,0,0,960,1040
+; 					WinMove,%WinTitle_Postman%,,960,0,960,1040
+; 				} Else {
+; 					; Win-10, 1-Monitor
+; 					; Msgbox, DDD
+; 					WinMove,%WinTitle_NodeJS%,,1913,0,974,1047
+; 					WinMove,%WinTitle_Postman%,,2873,0,974,1047
+; 				}
+; 			}
+; 			WinActivate,%WinTitle_NodeJS%
+; 			WinActivate,%WinTitle_Postman%
+; 		} Else {
+; 			; Msgbox, EEE
+; 		}
+; 	} Else {
+; 		; Msgbox, FFF
+; 	}
+; 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;	@  OpenChrome - Opens the application "Visual Studio Code"
 OpenChrome() {
 	OPEN_TO_URL = www.google.com
@@ -1298,7 +1321,7 @@ OpenChrome() {
 	Return
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;	@  OpenVisualStudio - Opens the application "Visual Studio Code"
 OpenVisualStudio() {
 	TargetExe := "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\IDE\devenv.exe"
@@ -1306,7 +1329,7 @@ OpenVisualStudio() {
 	Return
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;	@ TabSpace_Loop
 ;			Designed for Samsung SmartThings' Web-IDE where (sometimes) multiple hundreds of
 ;			checkboxes need to be selected individually to update from a Git repo
@@ -1320,7 +1343,7 @@ TabSpace_Loop(LoopIterations) {
 	Return
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;	@ SendSpace
 ;			For some reason, windows 10 doesn't like Send {Space} (as-in it 'ignores' the
 ;			keypress), but happily accepts Send {SC039} as equivalent to a spacebar-press
@@ -1328,7 +1351,7 @@ SendSpace() {
 	Send {SC039}
 	Return
 }
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;	@ Space..._Loop
 ;			Designed for Windows Task Scheduler to quickly show open all tasks on the main
 ;			page, which can then be sorted (but only for the ones that've been opened)
@@ -1342,27 +1365,8 @@ SpaceUp_Loop(LoopIterations) {
 	}
 	Return
 }
-; SpaceUp_Loop(LoopIterations, WinTitle) {
-; 	SetKeyDelay, 0, -1
-; 	SetControlDelay, -1
-; 	SetTitleMatchMode, 2
-; 	; WinActivate,%WinTitle%
-; 	Loop %LoopIterations% {
-; 		DatStr=Sending {Space} to %WinTitle%
-; 		ToolTip, %DatStr%, 250, %A_Index%, `
-; 		ControlSend,, {Space}, %WinTitle%
-; 		; Send {Space}
-; 		Sleep 100
-; 		DatStr=Sending {Up} to %WinTitle%
-; 		ToolTip, %DatStr%, 500, %A_Index%, 2
-; 		ControlSend,, {Up}, %WinTitle%
-; 		; Send {Up}
-; 		Sleep 100
-; 	}
-; 	Return
-; }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  @  OpenVSCode - Opens the application "Visual Studio Code"
 OpenVSCode() {
 	; Set Path to VSCode Executable
@@ -1405,7 +1409,7 @@ OpenVSCode() {
 	Return
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;   @ ActiveWindow_ToggleRestoreMaximize - Toggle Active Window:  "Maximized" / "Non-Maximized"
 ActiveWindow_ToggleRestoreMaximize() {
 	WinGet, WinState, MinMax, A
@@ -1420,7 +1424,7 @@ ActiveWindow_ToggleRestoreMaximize() {
 	}
 	Return
 }
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;   @ ActiveWindow_Maximize - Only maximize active window if it isn't maximized already
 ActiveWindow_Maximize() {
 	WinGet, WinState, MinMax, A
@@ -1430,7 +1434,7 @@ ActiveWindow_Maximize() {
 	Return
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 get_ahk_id_from_title(WinTitle,ExcludeTitle) {
 	SetTitleMatchMode, 2
@@ -1445,7 +1449,7 @@ get_ahk_id_from_pid(WinPid) {
 	Return dat_ahk_id
 }
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;  HOTKEY:  Caps Lock
 ;  ACTION:  Permanently disable CapsLock (unless Shift+CapsLock is pressed, then toggle CapsLock like normal)
 ;
@@ -1459,7 +1463,7 @@ CapsLock::
 	SetCapsLockState, % GetKeyState("CapsLock", "T") ? "Off" : "On"
 	Return
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 
 ; Gosub, NumCapsScrollLock_CreateOSD
@@ -1614,7 +1618,7 @@ CapsLock::
 ; ;
 
 ;
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
 ;
 	
 	
@@ -1643,10 +1647,10 @@ CapsLock::
 
 ; FUTURE HOTKEYS TO DESIGN:
 
-;	-----------------------------------------
-; NEED: hotkey to open another instance of currently-selected program
+; ------------------------------------------------------------
+; NEED: hotkey to duplicate active program (e.g. open-another-instance-of the currently active program)
 ; 		-> get the file path selected program (same as winkey+q's old implementation), then run another instance of that program
-; -----------------------------------------
+; ------------------------------------------------------------
 
 
   ;                                  ;
@@ -1658,9 +1662,10 @@ CapsLock::
 
 
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;   ----------------------------------------------------------------   Community-Created Scripts   -----------------------------------------------------------------
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
+; ------------------------------------------------------------
+;
+;   Community-Created Scripts   
+;
 
 StrLenUnicode(data) {
 	RegExReplace(data, "s).", "", i)
@@ -1684,11 +1689,19 @@ ShowScreenSaver() { ; https://www.autohotkey.com/docs/commands/PostMessage.htm#E
 	Return
 }
 
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-;   --------------------------------------------------------   Notes-to-Self  (Documentation / Training)   ---------------------------------------------------------
-;==----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-; *** TO GET KEY-CODES:
+; ------------------------------------------------------------
+;   Documentation
+; ------------------------------------------------------------
+;
+;
+; SetTitleMatchMode, 1  ; Title must START-WITH [ WinTitle ]
+; SetTitleMatchMode, 2: ; Title must CONTAIN [ WinTitle ]
+; SetTitleMatchMode, 3: ; Title must EXACTLY-MATCH [ WinTitle ]
+;
+;
+; ------------------------------------------------------------
+;
+; *** To obtain the unique code(s) thrown by the keyboard per-keypress:
 ;
 ;   //    Create a separate AutoHotkey (.ahk) Script and paste these 3 lines into
 ;   //    it. Make sure to save it with a .ahk file extension:
@@ -1707,16 +1720,18 @@ ShowScreenSaver() { ; https://www.autohotkey.com/docs/commands/PostMessage.htm#E
 ;   //  Key:    Refer to the "Key" column to acquire the "Hotstring" of any keys pressed (string, length varies)
 ;
 ;   //  NOTE:  If the above method fails, refer to: https://autohotkey.com/docs/commands/GetKey.htm
-
-
+; 
+; ------------------------------------------------------------
+; 
 ; *** TO DETERMINE THE COMMAND BEING SENT:
 ;			SC029::
 ;			SplashTextOn, 250, 40, Debugging, Command Sent
 ;			Sleep 500
 ;			SplashTextOff
 ; 		-- Remainder of your script
-
-
+; 
+; ------------------------------------------------------------
+; 
 ;			MouseClick,[Button],[X_Coord],[Y_Coord],[ClickCount],[Speed],[U|D],[Relative]
 ;
 ;          PARAMS:
@@ -1727,11 +1742,34 @@ ShowScreenSaver() { ; https://www.autohotkey.com/docs/commands/PostMessage.htm#E
 ;	         		     [Speed]  =  { Movement speed of mouse across the screen - 0 is Instant --- DEFAULTS TO DEFAULT MOUSE MOVE SPEED SET BY [SetDefaultMouseSpeed, Speed], OTHERWISE DEFAULTS TO 2 }
 ;	         		       [U|D]  =  { Only do a Click-Down (D) or Click-Up (U) click-event --- DEFAULTS A *DOWN* FOLLOWED BY AN *UP* EVENT, IF OMITTED}
 ;	         		  [Relative]  =  { If set to (R), the X & Y Coordinates will be treated as an offset to mouse's current position --- DEFAULTS TO NON-RELATIVE MOVEMENT, IF OMITTED }
-	
+; 
+; ------------------------------------------------------------
+;
 ; MouseClickDrag, WhichButton, X1, Y1, X2, Y2 [, Speed, R]
+;
+; ------------------------------------------------------------
+;
 ; MouseMove, X, Y [, Speed, R]
-; ControlClick [, Control-or-Pos, WinTitle, WinText, WhichButton, ClickCount, Options, ExcludeTitle, ExcludeText]
-	
+;
+; ------------------------------------------------------------
+
+EXAMPLE_ControlClick() {
+	;;;
+	;;; ControlClick [, Control-or-Pos, WinTitle, WinText, WhichButton, ClickCount, Options, ExcludeTitle, ExcludeText]
+	;;;
+	CoordMode, Mouse, Screen
+	SetDefaultMouseSpeed, 0
+	SetControlDelay, -1
+	; WinGetTitle, WinTitle, A
+	WinTitle=NoxPlayer
+	x_loc := (A_ScreenWidth - 20)
+	y_loc := 315
+	ControlClick, x%x_loc% y%y_loc%, %WinTitle%
+}
+
+
+; ------------------------------------------------------------
+;	
 ; BASIC ARRAY INSTANTIATION:
 ;				Jack := { profession: "teacher"
 ;								 , height: "tall"
@@ -1748,14 +1786,14 @@ ShowScreenSaver() { ; https://www.autohotkey.com/docs/commands/PostMessage.htm#E
 ;
 ; BASIC ARRAY USE:
 ;				MsgBox, % Person.Jack.city
-
-
-
+; 
+; 
+; 
 ; MsgBox has tons of options for confirmations on popups ( Manual @ https://autohotkey.com/docs/commands/MsgBox.htm )
 ; ...::
-	; WinGetActiveStats, Title, Width, Height, X, Y
+	; WinGetActiveStats, WinTitle, Width, Height, X, Y
 	; WinGetText, WinText, A
-	; MsgBox, 4, , WinTitle `n%Title%   `n`nWindow Size: `n   Width (%Width%)     Height (%Height%)   `n`nWindow Coordinates: `n   X (%X%)     Y (%Y%)   `n`nSkip WinText?, 10  ; 10-second timeout.
+	; MsgBox, 4, , WinTitle `n%WinTitle%   `n`nWindow Size: `n   Width (%Width%)     Height (%Height%)   `n`nWindow Coordinates: `n   X (%X%)     Y (%Y%)   `n`nSkip WinText?, 10  ; 10-second timeout.
 	; IfMsgBox, Yes
 		; Return
 	; IfMsgBox, No
@@ -1764,22 +1802,24 @@ ShowScreenSaver() { ; https://www.autohotkey.com/docs/commands/PostMessage.htm#E
 	; IfMsgBox, Timeout
 		; Return
 	; Return
-	
-
+;
+; ------------------------------------------------------------
 ;
 ; MENU ITEMS:    https://autohotkey.com/docs/commands/Menu.htm
 ; GENERAL USE:   Menu, MenuName, Cmd, P3, P4, P5
 ;
-
+; ------------------------------------------------------------
+;
+; 
 ; Menu, tray, add  ; Creates a separator line.
 ; Menu, tray, add, "Lineage-2", MenuHandler  ; Creates a new menu item.
 ; return
-
+; 
 ; MenuHandler:
 ; MsgBox You selected %A_ThisMenuItem% from menu %A_ThisMenu%.
 ; MsgBox A_TitleMatchMode[%A_TitleMatchMode%], A_TitleMatchModeSpeed=[%A_TitleMatchModeSpeed%]
 ; return
-
+; 
 ; Menu, FileMenu, Add, Script Icon, MenuHandler_FileMenu
 ; Menu, FileMenu, Add, Suspend Icon, MenuHandler_FileMenu
 ; Menu, FileMenu, Add, Pause Icon, MenuHandler_FileMenu
@@ -1792,21 +1832,15 @@ ShowScreenSaver() { ; https://www.autohotkey.com/docs/commands/PostMessage.htm#E
 ; Gui, Show
 ; MenuHandler_FileMenu:
 ; Return
-
+; 
 ; Exit:
 ; ExitApp
-
-; SetTitleMatchMode - Sets the matching behavior of the WinTitle parameter in commands such as WinWait.
-; 1: A window's title must start with the specified WinTitle to be a match.
-; 2: A window's title can contain WinTitle anywhere inside it to be a match. 
-; 3: A window's title must exactly match WinTitle to be a match.
-;
-
+; 
 ; Example: Using in-line if conditional(s)
 ; 
 ; y := ( ( y = 8 ) ? ( 2008 ) : ( ( y = 9 ) ? ( 2009 ) : ( ( y = 0 ) ? ( 2010 ) : ( 2011 ) ) ) )
 ;
-
+; 
 ;
 ; Example: Strlen doesn't have a whole lot to do with actual/displayed character-widths
 ;
@@ -1823,9 +1857,6 @@ ShowScreenSaver() { ; https://www.autohotkey.com/docs/commands/PostMessage.htm#E
 ; 	Return
 ; }
 ; ------------------------------------------------------------
-
-; ------------------------------------------------------------
-;
 
 CustomPopupButtons_Demo() {
 	; ;;; CUSTOM POPUP OPTIONS (EXAMPLE)

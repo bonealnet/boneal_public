@@ -1,8 +1,28 @@
-START_TIMESTAMP=$(date +'%s.%N');
-START_EPOCHSECONDS=$(echo ${START_TIMESTAMP} | cut --delimiter '.' --fields 1);
-START_MILLISECONDS=$(echo ${START_TIMESTAMP} | cut --delimiter '.' --fields 2 | cut --characters 1-3);
-START_MICROSECONDS=$(echo ${START_TIMESTAMP} | cut --delimiter '.' --fields 2 | cut --characters 1-6);
-START_DATETIME=$(date --date=@${START_EPOCHSECONDS} +'%Y-%m-%d %H:%M:%S');
+#!/bin/bash
+
+# ------------------------------------------------------------
+#
+# 	Date-Time Vars
+#		 |--> Make sure that the "date" command is called only once (e.g. make sure to only grab one timestamp)
+#		      This way, we can format it however we want without concern of inaccuracies existing between multiple date/timestamp values
+#
+#
+START_SECONDS_NANOSECONDS=$(date +'%s.%N');
+START_EPOCHSECONDS=$(echo ${START_SECONDS_NANOSECONDS} | cut --delimiter '.' --fields 1);
+START_NANOSECONDS=$(echo ${START_SECONDS_NANOSECONDS} | cut --delimiter '.' --fields 2 | cut --characters 1-9);
+START_MICROSECONDS=$(echo ${START_NANOSECONDS} | cut --characters 1-6);
+START_MILLISECONDS=$(echo ${START_NANOSECONDS} | cut --characters 1-3);
+START_DATETIME="$(date --date=@${START_EPOCHSECONDS} +'%Y-%m-%d %H:%M:%S')";
+START_TIMESTAMP="$(date --date=@${START_EPOCHSECONDS} +'%Y%m%d_%H%M%S')";
+START_TIMESTAMP_FILENAME="$(date --date=@${START_EPOCHSECONDS} +'%Y-%m-%d_%H-%M-%S')";
+START_TIMESTAMP_COMPACT="$(date --date=@${START_EPOCHSECONDS} +'%Y%m%d%H%M%S')";
+START_SECONDS="$(date --date=@${START_EPOCHSECONDS} +'%s')";
+START_FRACTION_SECONDS="$(date --date=@${START_EPOCHSECONDS} +'%N')";
+DATE_AS_YMD="$(date --date=@${START_EPOCHSECONDS} +'%Y%m%d')";
+TODAY_AS_WEEKDAY="$(date --date=@${START_EPOCHSECONDS} +'%a')";
+
+
+# ------------------------------------------------------------
 
 # Command here...
 sleep 0.5; # Example command - sleep half a second
